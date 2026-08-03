@@ -3,12 +3,12 @@ import { redirect } from 'next/navigation';
 import { container, InjectionTokens } from '~/core/container';
 import { auth } from '~/modules/auth/lib/auth';
 import type { ListDocumentsUseCase } from '~/modules/gestion-documental/application/list-documents.use-case';
-import { IncomingInboxTable } from './_components/incoming-inbox-table';
 import { SystemShell } from '~/components/layout/SystemShell';
+import { DocumentsClientView } from './_components/documents-client-view';
 
 export const dynamic = 'force-dynamic';
 
-export default async function IncomingInboxPage() {
+export default async function DocumentsPage() {
     const session = await auth();
 
     if (!session?.user?.organizationId) {
@@ -16,34 +16,26 @@ export default async function IncomingInboxPage() {
     }
 
     const user = session.user;
+    const organizationId = user.organizationId;
+
     const listDocumentsUseCase = container.resolve<ListDocumentsUseCase>(
         InjectionTokens.ListDocumentsUseCase
     );
 
-    const { data: documents } = await listDocumentsUseCase.execute({
-        organizationId: user.organizationId,
+    const result = await listDocumentsUseCase.execute({
+        organizationId,
         page: 1,
         pageSize: 50,
-        status: 'PENDIENTE_RECEPCION',
-    }).catch(() => ({ data: [] }));
+    }).catch(() => ({ data: [], total: 0, currentPage: 1, totalPages: 1 }));
 
     return (
         <SystemShell
             userRole={user.role}
             userName={user.name}
             userEmail={user.email}
-            organizationId={user.organizationId}
+            organizationId={organizationId}
         >
-            <div className="max-w-7xl mx-auto space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold text-white">Correspondencia Entrante</h1>
-                    <p className="text-slate-300 text-xs sm:text-sm mt-1">
-                        Documentos derivados pendientes de confirmación de recepción física / digital.
-                    </p>
-                </div>
-
-                <IncomingInboxTable documents={documents} />
-            </div>
+            <DocumentsClientView initialDocuments={result.data} organizationId={organizationId} />
         </SystemShell>
     );
 }

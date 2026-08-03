@@ -5,6 +5,7 @@ import { auth } from '~/modules/auth/lib/auth';
 import type { GenerateReportUseCase } from '~/modules/gestion-documental/application/generate-report.use-case';
 import { ReportFilters } from './_components/report-filters';
 import { StatusSemaphoreBadge } from '~/components/document/status-semaphore-badge';
+import { SystemShell } from '~/components/layout/SystemShell';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,87 +21,98 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         redirect('/login');
     }
 
+    const user = session.user;
     const useCase = container.resolve<GenerateReportUseCase>(
         InjectionTokens.GenerateReportUseCase
     );
 
     const report = await useCase.execute({
-        organizationId: session.user.organizationId,
+        organizationId: user.organizationId,
         status: searchParams.status,
-    });
+    }).catch(() => ({
+        summary: { totalDocuments: 0, pendingCount: 0, receivedCount: 0, overdueCount: 0 },
+        documents: [],
+    }));
 
     return (
-        <div className="container mx-auto py-8 space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Reportes Gerenciales y Monitoreo</h1>
-                <p className="text-muted-foreground text-sm mt-1">
-                    Consulta consolidada, análisis de atención de trámites y exportación oficial a Excel y PDF.
-                </p>
-            </div>
+        <SystemShell
+            userRole={user.role}
+            userName={user.name}
+            userEmail={user.email}
+            organizationId={user.organizationId}
+        >
+            <div className="max-w-7xl mx-auto space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-white">Reportes Gerenciales y Monitoreo</h1>
+                    <p className="text-slate-300 text-xs sm:text-sm mt-1">
+                        Consulta consolidada, análisis de atención de trámites y exportación oficial a Excel y PDF.
+                    </p>
+                </div>
 
-            <ReportFilters />
+                <ReportFilters />
 
-            {/* Tarjetas de Resumen Gerencial */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-card p-5 rounded-lg border shadow-sm">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase">Total Trámites</p>
-                    <p className="text-2xl font-bold mt-1">{report.summary.totalDocuments}</p>
+                {/* Tarjetas de Resumen Gerencial */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="glass-panel p-5 rounded-2xl border border-slate-800">
+                        <p className="text-xs font-semibold text-slate-300 uppercase">Total Trámites</p>
+                        <p className="text-2xl font-extrabold text-white font-mono mt-1">{report.summary.totalDocuments}</p>
+                    </div>
+                    <div className="glass-panel p-5 rounded-2xl border border-amber-500/30">
+                        <p className="text-xs font-semibold text-amber-300 uppercase">Trámites Pendientes</p>
+                        <p className="text-2xl font-extrabold text-amber-300 font-mono mt-1">{report.summary.pendingCount}</p>
+                    </div>
+                    <div className="glass-panel p-5 rounded-2xl border border-emerald-500/30">
+                        <p className="text-xs font-semibold text-emerald-300 uppercase">Trámites Recepcionados</p>
+                        <p className="text-2xl font-extrabold text-emerald-300 font-mono mt-1">{report.summary.receivedCount}</p>
+                    </div>
+                    <div className="glass-panel p-5 rounded-2xl border border-rose-500/30 bg-rose-950/20">
+                        <p className="text-xs font-semibold text-rose-300 uppercase">Trámites en Mora (&gt; 5 días)</p>
+                        <p className="text-2xl font-extrabold text-rose-400 font-mono mt-1">{report.summary.overdueCount}</p>
+                    </div>
                 </div>
-                <div className="bg-card p-5 rounded-lg border shadow-sm">
-                    <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase">Trámites Pendientes</p>
-                    <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{report.summary.pendingCount}</p>
-                </div>
-                <div className="bg-card p-5 rounded-lg border shadow-sm">
-                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase">Trámites Recepcionados</p>
-                    <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{report.summary.receivedCount}</p>
-                </div>
-                <div className="bg-card p-5 rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 shadow-sm">
-                    <p className="text-xs font-semibold text-rose-700 dark:text-rose-400 uppercase">Trámites en Mora (&gt; 5 días)</p>
-                    <p className="text-2xl font-bold text-rose-700 dark:text-rose-400 mt-1">{report.summary.overdueCount}</p>
-                </div>
-            </div>
 
-            {/* Tabla de Resultados */}
-            <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-muted text-muted-foreground uppercase text-xs">
-                            <tr>
-                                <th className="py-3 px-4 font-semibold">N° Hoja de Ruta</th>
-                                <th className="py-3 px-4 font-semibold">Asunto</th>
-                                <th className="py-3 px-4 font-semibold">Remitente</th>
-                                <th className="py-3 px-4 font-semibold">Estado</th>
-                                <th className="py-3 px-4 font-semibold">Plazo / Días</th>
-                                <th className="py-3 px-4 font-semibold">Fecha Ingreso</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {report.documents.length === 0 ? (
+                {/* Tabla de Resultados */}
+                <div className="glass-panel-glow rounded-3xl p-6 border border-slate-800 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-left">
+                            <thead className="border-b border-slate-800 text-slate-300 uppercase font-mono">
                                 <tr>
-                                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
-                                        No se encontraron trámites que coincidan con los criterios de reporte.
-                                    </td>
+                                    <th className="py-3 px-4 font-semibold">N° Hoja de Ruta</th>
+                                    <th className="py-3 px-4 font-semibold">Asunto</th>
+                                    <th className="py-3 px-4 font-semibold">Remitente</th>
+                                    <th className="py-3 px-4 font-semibold">Estado</th>
+                                    <th className="py-3 px-4 font-semibold">Plazo / Días</th>
+                                    <th className="py-3 px-4 font-semibold">Fecha Ingreso</th>
                                 </tr>
-                            ) : (
-                                report.documents.map((doc) => (
-                                    <tr key={doc.id} className="hover:bg-muted/50 transition-colors">
-                                        <td className="py-3 px-4 font-mono font-medium">{doc.trackingCode}</td>
-                                        <td className="py-3 px-4 font-medium">{doc.subject}</td>
-                                        <td className="py-3 px-4">{doc.sender}</td>
-                                        <td className="py-3 px-4">{doc.status}</td>
-                                        <td className="py-3 px-4">
-                                            <StatusSemaphoreBadge startDate={doc.receptionDate || doc.createdAt} />
-                                        </td>
-                                        <td className="py-3 px-4 text-muted-foreground">
-                                            {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('es-PE') : '-'}
+                            </thead>
+                            <tbody className="divide-y divide-slate-800/60">
+                                {report.documents.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="py-8 text-center text-slate-400">
+                                            No se encontraron trámites que coincidan con los criterios de reporte.
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    report.documents.map((doc) => (
+                                        <tr key={doc.id} className="hover:bg-slate-900/60 transition-colors">
+                                            <td className="py-3.5 px-4 font-mono font-bold text-cyan-400">{doc.trackingCode}</td>
+                                            <td className="py-3.5 px-4 font-medium text-slate-200">{doc.subject}</td>
+                                            <td className="py-3.5 px-4 text-slate-300">{doc.sender}</td>
+                                            <td className="py-3.5 px-4 text-slate-300">{doc.status}</td>
+                                            <td className="py-3.5 px-4">
+                                                <StatusSemaphoreBadge startDate={doc.receptionDate || doc.createdAt} />
+                                            </td>
+                                            <td className="py-3.5 px-4 text-slate-400 font-mono">
+                                                {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('es-PE') : '-'}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        </SystemShell>
     );
 }

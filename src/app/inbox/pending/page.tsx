@@ -4,6 +4,7 @@ import { container, InjectionTokens } from '~/core/container';
 import { auth } from '~/modules/auth/lib/auth';
 import type { ListDocumentsUseCase } from '~/modules/gestion-documental/application/list-documents.use-case';
 import { PendingInboxTable } from './_components/pending-inbox-table';
+import { SystemShell } from '~/components/layout/SystemShell';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,27 +15,35 @@ export default async function PendingInboxPage() {
         redirect('/login');
     }
 
+    const user = session.user;
     const listDocumentsUseCase = container.resolve<ListDocumentsUseCase>(
         InjectionTokens.ListDocumentsUseCase
     );
 
     const { data: documents } = await listDocumentsUseCase.execute({
-        organizationId: session.user.organizationId,
+        organizationId: user.organizationId,
         page: 1,
         pageSize: 50,
         status: 'RECIBIDO',
-    });
+    }).catch(() => ({ data: [] }));
 
     return (
-        <div className="container mx-auto py-10 space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Correspondencia Pendiente</h1>
-                <p className="text-muted-foreground mt-1">
-                    Documentos bajo tu responsabilidad y custodia activa. Puedes derivar, justificar atrasos, agrupar o archivar.
-                </p>
-            </div>
+        <SystemShell
+            userRole={user.role}
+            userName={user.name}
+            userEmail={user.email}
+            organizationId={user.organizationId}
+        >
+            <div className="max-w-7xl mx-auto space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-white">Correspondencia Pendiente</h1>
+                    <p className="text-slate-300 text-xs sm:text-sm mt-1">
+                        Documentos bajo su responsabilidad y custodia activa. Puede derivar, responder, justificar atrasos, agrupar o archivar.
+                    </p>
+                </div>
 
-            <PendingInboxTable documents={documents} />
-        </div>
+                <PendingInboxTable documents={documents} />
+            </div>
+        </SystemShell>
     );
 }

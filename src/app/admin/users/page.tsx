@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '~/modules/auth/lib/auth';
 import { listUsers } from './_actions';
 import { UserManagementTable } from '~/components/users/user-management-table';
+import { SystemShell } from '~/components/layout/SystemShell';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,18 +15,32 @@ export default async function UserManagementPage() {
         redirect('/login');
     }
 
-    const userRole = (session.user as any).role || 'OPERADOR';
+    const user = session.user;
+    const userRole = user.role || 'OPERADOR';
 
-    if (userRole !== 'ADMINISTRADOR') {
-        redirect('/');
+    if (userRole !== 'ADMINISTRADOR' && userRole !== 'SUPERADMIN') {
+        redirect('/dashboard');
     }
 
-    const users = await listUsers();
+    const users = await listUsers().catch(() => []);
 
     return (
-        <div className="container mx-auto py-10">
-            <h1 className="text-3xl font-bold mb-6">Gestión de Usuarios</h1>
-            <UserManagementTable initialUsers={users} />
-        </div>
+        <SystemShell
+            userRole={userRole}
+            userName={user.name}
+            userEmail={user.email}
+            organizationId={user.organizationId}
+        >
+            <div className="max-w-7xl mx-auto space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-white">Gestión de Usuarios</h1>
+                    <p className="text-slate-300 text-xs sm:text-sm mt-1">
+                        Administración de cuentas de usuario por organización y asignación de roles.
+                    </p>
+                </div>
+
+                <UserManagementTable initialUsers={users} />
+            </div>
+        </SystemShell>
     );
 }
