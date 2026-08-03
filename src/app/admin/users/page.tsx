@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { auth } from '~/modules/auth/lib/auth';
 import { listUsers } from './_actions';
+import { fetchPersistentRoles } from '~/app/admin/roles/_actions';
 import { UserManagementTable } from '~/components/users/user-management-table';
 import { SystemShell } from '~/components/layout/SystemShell';
 
@@ -22,7 +23,10 @@ export default async function UserManagementPage() {
         redirect('/dashboard');
     }
 
-    const users = await listUsers().catch(() => []);
+    const [users, roles] = await Promise.all([
+        listUsers().catch(() => []),
+        fetchPersistentRoles().catch(() => []),
+    ]);
 
     return (
         <SystemShell
@@ -35,11 +39,11 @@ export default async function UserManagementPage() {
                 <div>
                     <h1 className="text-3xl font-bold text-white">Gestión de Usuarios</h1>
                     <p className="text-slate-300 text-xs sm:text-sm mt-1">
-                        Administración de cuentas de usuario por organización y asignación de roles.
+                        Administración de cuentas de usuario por organización y asignación de roles institucionales.
                     </p>
                 </div>
 
-                <UserManagementTable initialUsers={users} />
+                <UserManagementTable initialUsers={users} availableRoles={roles} />
             </div>
         </SystemShell>
     );

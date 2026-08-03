@@ -2,20 +2,40 @@
 
 import * as React from 'react';
 import type { User, UserRole } from '~/modules/users/core/user.repository';
+import type { PersistentRoleItem } from '~/app/admin/roles/_actions';
 import { createUser, deleteUser } from '~/app/admin/users/_actions';
 
 type UserManagementTableProps = {
     initialUsers: User[];
+    availableRoles?: PersistentRoleItem[];
 };
 
-export function UserManagementTable({ initialUsers }: UserManagementTableProps) {
+export function UserManagementTable({ initialUsers, availableRoles = [] }: UserManagementTableProps) {
     const [users, setUsers] = React.useState<User[]>(initialUsers);
     const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
     const [name, setName] = React.useState('');
     const [email, setEmail] = React.useState('');
-    const [role, setRole] = React.useState<UserRole>('OPERADOR');
+    const [role, setRole] = React.useState<string>('OPERADOR');
     const [loading, setLoading] = React.useState(false);
     const [message, setMessage] = React.useState<string | null>(null);
+
+    // Combine system default roles with custom roles
+    const roleOptions = React.useMemo(() => {
+        const systemRoles = [
+            { id: 'OPERADOR', name: 'OPERADOR (Servidor Público / Ventanilla)' },
+            { id: 'ADMINISTRADOR', name: 'ADMINISTRADOR (Jefe de Oficina)' },
+            { id: 'SUPERADMIN', name: 'SUPERADMIN (Administrador de Sistema)' },
+        ];
+
+        const customRoles = availableRoles
+            .filter(r => !['OPERADOR', 'ADMINISTRADOR', 'SUPERADMIN'].includes(r.name))
+            .map(r => ({
+                id: r.name,
+                name: `${r.name} (${r.office})`,
+            }));
+
+        return [...systemRoles, ...customRoles];
+    }, [availableRoles]);
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -24,7 +44,7 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
         try {
             setLoading(true);
             setMessage(null);
-            const result = await createUser(name.trim(), email.trim(), role);
+            const result = await createUser(name.trim(), email.trim(), role as UserRole);
             
             const newUser: User = (result.user as any) || {
                 id: `usr-${Date.now()}`,
@@ -38,7 +58,7 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
             };
 
             setUsers(prev => [newUser, ...prev]);
-            setMessage(`¡Usuario "${newUser.name}" creado con éxito! Contraseña temporal: ${result.temporaryPassword || 'TempPass123'}`);
+            setMessage(`¡Usuario "${newUser.name}" creado con éxito con rol "${role}"! Contraseña temporal: ${result.temporaryPassword || 'TempPass123'}`);
             setIsCreateModalOpen(false);
             setName('');
             setEmail('');
@@ -110,6 +130,9 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
                             ) : (
                                 users.map((user) => {
                                     const displayName = user.name || 'Sin Nombre';
+                                    const roleStr = user.role || 'OPERADOR';
+                                    const isCustom = !['SUPERADMIN', 'ADMINISTRADOR', 'OPERADOR'].includes(roleStr);
+
                                     return (
                                         <tr key={user.id} className="hover:bg-slate-900/60 transition-colors">
                                             <td className="py-3.5 px-4 font-bold text-white flex items-center gap-2">
@@ -121,13 +144,15 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
                                             <td className="py-3.5 px-4 text-cyan-300 font-mono">{user.email}</td>
                                             <td className="py-3.5 px-4">
                                                 <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase ${
-                                                    user.role === 'SUPERADMIN'
+                                                    roleStr === 'SUPERADMIN'
                                                         ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                                        : user.role === 'ADMINISTRADOR'
+                                                        : roleStr === 'ADMINISTRADOR'
                                                             ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
-                                                            : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                                                            : isCustom
+                                                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                                                                : 'bg-slate-800 text-slate-300 border border-slate-700'
                                                 }`}>
-                                                    {user.role}
+                                                    {isCustom ? `🛡️ ${roleStr}` : roleStr}
                                                 </span>
                                             </td>
                                             <td className="py-3.5 px-4 text-right">
@@ -183,15 +208,17 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-slate-300 mb-1">Rol Asignado</label>
+                                <label className="block text-xs font-medium text-slate-300 mb-1">Rol Asignado (Selección Dinámica)</label>
                                 <select
                                     value={role}
-                                    onChange={(e) => setRole(e.target.value as UserRole)}
+                                    onChange={(e) => setRole(e.target.value)}
                                     className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
                                 >
-                                    <option value="OPERADOR">OPERADOR (Servidor Público / Ventanilla)</option>
-                                    <option value="ADMINISTRADOR">ADMINISTRADOR (Jefe de Oficina)</option>
-                                    <option value="SUPERADMIN">SUPERADMIN (Administrador de Sistema)</option>
+                                    {roleOptions.map((opt) => (
+                                        <option key={opt.id} value={opt.id}>
+                                            {opt.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
