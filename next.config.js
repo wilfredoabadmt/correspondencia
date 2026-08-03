@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'standalone',
+    output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
 };
 
 // Only loaded when running `pnpm run analyze`, so production builds don't

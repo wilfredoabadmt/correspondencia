@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { auth } from '@/modules/auth/lib/auth';
 
-const publicRoutes = ['/login'];
+const publicRoutes = ['/login', '/'];
 const protectedRoutesDefaultRedirect = '/dashboard';
 const publicRoutesDefaultRedirect = '/login';
 
@@ -11,10 +11,9 @@ export default async function middleware(req: NextRequest) {
     const isLoggedIn = !!session?.user;
 
     const isPublic = publicRoutes.includes(nextUrl.pathname);
-    const isRoot = nextUrl.pathname === '/';
 
     if (isLoggedIn) {
-        if (isPublic || isRoot) {
+        if (isPublic) {
             return NextResponse.redirect(new URL(protectedRoutesDefaultRedirect, nextUrl));
         }
         return NextResponse.next();
