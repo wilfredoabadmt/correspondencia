@@ -19,8 +19,6 @@ export type DashboardKpis = {
     totalDocuments: number;
 };
 
-export const DASHBOARD_REPOSITORY_TOKEN = 'IDashboardRepository';
-
 export interface IDashboardRepository {
     getKpis(params: { organizationId: string }): Promise<DashboardKpis>;
     getRecentDocuments(params: { organizationId: string; limit: number }): Promise<RecentDocument[]>;

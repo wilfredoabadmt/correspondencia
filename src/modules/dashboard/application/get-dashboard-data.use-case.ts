@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
+import { InjectionTokens } from '~/core/injection-tokens';
 import {
-    DASHBOARD_REPOSITORY_TOKEN,
     type DashboardKpis,
     type IDashboardRepository,
     type RecentDocument,
@@ -20,7 +20,7 @@ export class GetDashboardDataUseCase {
     private readonly RECENT_DOCUMENTS_LIMIT = 10;
 
     constructor(
-        @inject(DASHBOARD_REPOSITORY_TOKEN)
+        @inject(InjectionTokens.DashboardRepository)
         private readonly dashboardRepository: IDashboardRepository
     ) { }
 
