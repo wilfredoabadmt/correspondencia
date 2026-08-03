@@ -15,6 +15,10 @@ import { JustifyDelayUseCase } from '~/modules/gestion-documental/application/ju
 import { GroupDocumentsUseCase } from '~/modules/gestion-documental/application/group-documents.use-case';
 import { ArchiveDocumentUseCase } from '~/modules/gestion-documental/application/archive-document.use-case';
 import { UnarchiveDocumentUseCase } from '~/modules/gestion-documental/application/unarchive-document.use-case';
+import { GenerateDocxTemplateUseCase } from '~/modules/gestion-documental/application/generate-docx-template.use-case';
+import { GenerateRoutingSlipPdfUseCase } from '~/modules/gestion-documental/application/generate-routing-slip-pdf.use-case';
+import { DocxGeneratorService } from '~/modules/gestion-documental/infra/docx-generator.service';
+import { PdfGeneratorService } from '~/modules/gestion-documental/infra/pdf-generator.service';
 import { GetDocumentDetailsUseCase } from '~/modules/gestion-documental/application/get-document-details.use-case';
 import { GetDocumentHistoryUseCase } from '~/modules/gestion-documental/application/get-document-history.use-case';
 import { ListDocumentsUseCase } from '~/modules/gestion-documental/application/list-documents.use-case';
@@ -98,6 +102,18 @@ container.register(InjectionTokens.ArchiveDocumentUseCase, {
 });
 container.register(InjectionTokens.UnarchiveDocumentUseCase, {
     useClass: UnarchiveDocumentUseCase,
+});
+container.register(InjectionTokens.DocxGeneratorService, {
+    useClass: DocxGeneratorService,
+});
+container.register(InjectionTokens.PdfGeneratorService, {
+    useClass: PdfGeneratorService,
+});
+container.register(InjectionTokens.GenerateDocxTemplateUseCase, {
+    useClass: GenerateDocxTemplateUseCase,
+});
+container.register(InjectionTokens.GenerateRoutingSlipPdfUseCase, {
+    useClass: GenerateRoutingSlipPdfUseCase,
 });
 
 // Register Area CRUD Use Cases

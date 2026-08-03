@@ -42,4 +42,9 @@ export const InjectionTokens = {
     GetDashboardDataUseCase: Symbol('IGetDashboardDataUseCase'),
     // Storage
     StorageService: Symbol('IStorageService'),
+    // Document & PDF Generators
+    DocxGeneratorService: Symbol('IDocxGeneratorService'),
+    PdfGeneratorService: Symbol('IPdfGeneratorService'),
+    GenerateDocxTemplateUseCase: Symbol('IGenerateDocxTemplateUseCase'),
+    GenerateRoutingSlipPdfUseCase: Symbol('IGenerateRoutingSlipPdfUseCase'),
 };

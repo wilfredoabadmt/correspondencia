@@ -1,0 +1,76 @@
+import 'reflect-metadata';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { GenerateDocxTemplateUseCase } from './generate-docx-template.use-case';
+import type { IDocumentRepository, DocumentWithArea } from '../core/document.repository';
+import type { IDocxGeneratorService } from '../core/docx-generator.service';
+
+class MockDocumentRepository implements IDocumentRepository {
+    create = vi.fn();
+    findDetailsById = vi.fn();
+    findMany = vi.fn();
+    derive = vi.fn();
+    receiveDocument = vi.fn();
+    rejectDocument = vi.fn();
+    cancelDerivation = vi.fn();
+    justifyDelay = vi.fn();
+    groupDocuments = vi.fn();
+    archiveDocument = vi.fn();
+    unarchiveDocument = vi.fn();
+}
+
+class MockDocxGeneratorService implements IDocxGeneratorService {
+    generateTemplate = vi.fn();
+}
+
+describe('GenerateDocxTemplateUseCase', () => {
+    let useCase: GenerateDocxTemplateUseCase;
+    let mockRepo: MockDocumentRepository;
+    let mockDocxService: MockDocxGeneratorService;
+
+    beforeEach(() => {
+        mockRepo = new MockDocumentRepository();
+        mockDocxService = new MockDocxGeneratorService();
+        useCase = new GenerateDocxTemplateUseCase(mockRepo, mockDocxService);
+    });
+
+    const mockDoc: DocumentWithArea = {
+        id: 'doc-1',
+        organizationId: 'org-1',
+        trackingId: 'I-2026-001',
+        trackingCode: 'INF/001-2026',
+        subject: 'Informe Prueba',
+        sender: 'Remitente Test',
+        status: 'Recibido',
+        receptionDate: new Date(),
+        documentType: 'Informe',
+        destinationAreaId: 'area-1',
+        destinationAreaName: 'Unidad Test',
+        areaHierarchyId: 'area-1',
+        currentUserId: null,
+        groupedIntoDocumentId: null,
+        folderCategory: null,
+        archiveObservations: null,
+        fileKey: null,
+        downloadUrl: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    };
+
+    it('debe generar la plantilla docx si el documento existe', async () => {
+        mockRepo.findDetailsById.mockResolvedValue(mockDoc);
+        mockDocxService.generateTemplate.mockResolvedValue(Buffer.from('fake-docx-content'));
+
+        const result = await useCase.execute({ documentId: 'doc-1', organizationId: 'org-1' });
+
+        expect(result.fileName).toContain('INF_001-2026.docx');
+        expect(result.buffer).toBeDefined();
+        expect(mockDocxService.generateTemplate).toHaveBeenCalled();
+    });
+
+    it('debe lanzar un error si el documento no existe', async () => {
+        mockRepo.findDetailsById.mockResolvedValue(null);
+
+        await expect(useCase.execute({ documentId: 'doc-invalid', organizationId: 'org-1' }))
+            .rejects.toThrow('Documento no encontrado o no tiene autorización para acceder.');
+    });
+});
