@@ -5,6 +5,7 @@ import { receiveDocumentAction, rejectDocumentAction } from '../_actions';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '~/components/ui/dialog';
 import { Textarea } from '~/components/ui/textarea';
+import { StatusSemaphoreBadge } from '~/components/document/status-semaphore-badge';
 import type { Document } from '~/modules/gestion-documental/core/document.repository';
 
 interface IncomingInboxTableProps {
@@ -55,6 +56,7 @@ export function IncomingInboxTable({ documents }: IncomingInboxTableProps) {
                             <th className="py-3 px-4 font-semibold">N° Hoja de Ruta</th>
                             <th className="py-3 px-4 font-semibold">Asunto</th>
                             <th className="py-3 px-4 font-semibold">Remitente</th>
+                            <th className="py-3 px-4 font-semibold">Plazo / Días</th>
                             <th className="py-3 px-4 font-semibold">Fecha Envío</th>
                             <th className="py-3 px-4 font-semibold text-right">Acciones</th>
                         </tr>
@@ -65,6 +67,9 @@ export function IncomingInboxTable({ documents }: IncomingInboxTableProps) {
                                 <td className="py-3 px-4 font-mono font-medium">{doc.trackingCode || doc.trackingId}</td>
                                 <td className="py-3 px-4 font-medium">{doc.subject}</td>
                                 <td className="py-3 px-4">{doc.sender}</td>
+                                <td className="py-3 px-4">
+                                    <StatusSemaphoreBadge startDate={doc.createdAt} />
+                                </td>
                                 <td className="py-3 px-4 text-muted-foreground">
                                     {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('es-PE') : '-'}
                                 </td>

@@ -31,6 +31,7 @@ describe('GetDashboardDataUseCase', () => {
             documentsToday: 5,
             pendingDocuments: 10,
             totalDocuments: 100,
+            overdueDocuments: 2,
         };
         const mockRecentDocuments: RecentDocument[] = [
             {

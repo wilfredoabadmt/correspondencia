@@ -17,6 +17,7 @@ export type DashboardKpis = {
     documentsToday: number;
     pendingDocuments: number;
     totalDocuments: number;
+    overdueDocuments: number;
 };
 
 export interface IDashboardRepository {

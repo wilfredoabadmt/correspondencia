@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '~/components/ui/textarea';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import { StatusSemaphoreBadge } from '~/components/document/status-semaphore-badge';
 import type { Document } from '~/modules/gestion-documental/core/document.repository';
 
 interface PendingInboxTableProps {
@@ -72,6 +73,7 @@ export function PendingInboxTable({ documents }: PendingInboxTableProps) {
                             <th className="py-3 px-4 font-semibold">N° Hoja de Ruta</th>
                             <th className="py-3 px-4 font-semibold">Asunto</th>
                             <th className="py-3 px-4 font-semibold">Tipo</th>
+                            <th className="py-3 px-4 font-semibold">Plazo / Días</th>
                             <th className="py-3 px-4 font-semibold">Fecha Recepción</th>
                             <th className="py-3 px-4 font-semibold text-right">Acciones</th>
                         </tr>
@@ -82,6 +84,9 @@ export function PendingInboxTable({ documents }: PendingInboxTableProps) {
                                 <td className="py-3 px-4 font-mono font-medium">{doc.trackingCode || doc.trackingId}</td>
                                 <td className="py-3 px-4 font-medium">{doc.subject}</td>
                                 <td className="py-3 px-4">{doc.documentType}</td>
+                                <td className="py-3 px-4">
+                                    <StatusSemaphoreBadge startDate={doc.receptionDate || doc.createdAt} />
+                                </td>
                                 <td className="py-3 px-4 text-muted-foreground">
                                     {doc.receptionDate ? new Date(doc.receptionDate).toLocaleDateString('es-PE') : '-'}
                                 </td>

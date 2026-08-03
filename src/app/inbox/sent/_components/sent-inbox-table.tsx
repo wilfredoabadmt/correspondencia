@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { cancelDerivationAction } from '../_actions';
 import { Button } from '~/components/ui/button';
+import { StatusSemaphoreBadge } from '~/components/document/status-semaphore-badge';
 import type { Document } from '~/modules/gestion-documental/core/document.repository';
 
 interface SentInboxTableProps {
@@ -41,6 +42,7 @@ export function SentInboxTable({ documents }: SentInboxTableProps) {
                             <th className="py-3 px-4 font-semibold">N° Hoja de Ruta</th>
                             <th className="py-3 px-4 font-semibold">Asunto</th>
                             <th className="py-3 px-4 font-semibold">Estado de Recepción</th>
+                            <th className="py-3 px-4 font-semibold">Plazo / Días</th>
                             <th className="py-3 px-4 font-semibold">Fecha Envío</th>
                             <th className="py-3 px-4 font-semibold text-right">Acción</th>
                         </tr>
@@ -59,9 +61,12 @@ export function SentInboxTable({ documents }: SentInboxTableProps) {
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                                                Recepcionado por Destinatario
+                                                Recepcionado
                                             </span>
                                         )}
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        <StatusSemaphoreBadge startDate={doc.createdAt} />
                                     </td>
                                     <td className="py-3 px-4 text-muted-foreground">
                                         {doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString('es-PE') : '-'}
