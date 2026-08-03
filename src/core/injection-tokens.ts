@@ -30,6 +30,9 @@ export const InjectionTokens = {
     DeleteRoleUseCase: Symbol('IDeleteRoleUseCase'),
     ListAvailablePermissionsUseCase: Symbol('IListAvailablePermissionsUseCase'),
     AuthorizationService: Symbol('AuthorizationService'),
+    // Dashboard
+    DashboardRepository: Symbol('IDashboardRepository'),
+    GetDashboardDataUseCase: Symbol('IGetDashboardDataUseCase'),
     // Storage
     StorageService: Symbol('IStorageService'),
 };

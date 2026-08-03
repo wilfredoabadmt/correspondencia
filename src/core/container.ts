@@ -36,6 +36,9 @@ import { AuthorizationService } from '~/core/auth/authorization.service';
 import { IStorageService } from '~/modules/storage/core/storage.service';
 import { R2StorageService } from '~/modules/storage/infra/r2.storage.service';
 
+import { DrizzleDashboardRepository } from '~/modules/dashboard/infra/drizzle-dashboard.repository';
+import { GetDashboardDataUseCase } from '~/modules/dashboard/application/get-dashboard-data.use-case';
+
 import { db } from '~/db';
 
 // Register DB client
@@ -130,6 +133,14 @@ container.register(InjectionTokens.ListAvailablePermissionsUseCase, {
 });
 container.register(InjectionTokens.AuthorizationService, {
     useClass: AuthorizationService,
+});
+
+// Register Dashboard Dependencies
+container.register(InjectionTokens.DashboardRepository, {
+    useClass: DrizzleDashboardRepository,
+});
+container.register(InjectionTokens.GetDashboardDataUseCase, {
+    useClass: GetDashboardDataUseCase,
 });
 
 // Register Storage Service
