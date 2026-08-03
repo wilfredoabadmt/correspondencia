@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe';
 import { and, count, desc, eq, gte } from 'drizzle-orm';
 
 import type { DB } from '@/core/db/db.di';
-import { InjectionTokens } from '@/core/container';
+import { InjectionTokens } from '~/core/injection-tokens';
 import * as schema from '@/db/schema';
 import type {
     DashboardKpis,

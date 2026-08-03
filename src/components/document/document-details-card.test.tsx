@@ -18,6 +18,10 @@ describe('DocumentDetailsCard', () => {
         areaHierarchyId: 'area-456',
         fileKey: 'key.pdf',
         downloadUrl: 'http://fake.url/download',
+        currentUserId: null,
+        groupedIntoDocumentId: null,
+        folderCategory: null,
+        archiveObservations: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };

@@ -101,16 +101,183 @@ export class DrizzleDocumentRepository implements IDocumentRepository {
         toAreaId,
         userId,
         comment,
+        derivationType = 'OFICIAL',
+        instructionCode,
+        isUrgent = false,
     }: DeriveParams): Promise<void> {
         await this.db.transaction(async (tx) => {
             // 1. Update the document's status and destination area
             await tx
                 .update(schema.documents)
-                .set({ status: 'En Proceso', destinationAreaId: toAreaId })
+                .set({ status: 'PENDIENTE_RECEPCION', destinationAreaId: toAreaId, currentUserId: null })
                 .where(eq(schema.documents.id, documentId));
 
             // 2. Create a record in the history table
-            await tx.insert(schema.documentHistory).values({ documentId, fromAreaId, toAreaId, userId, comment });
+            await tx.insert(schema.documentHistory).values({
+                documentId,
+                fromAreaId,
+                toAreaId,
+                userId,
+                fromUserId: userId,
+                action: 'DERIVAR',
+                receptionStatus: 'PENDIENTE_RECEPCION',
+                comment,
+                derivationType,
+                instructionCode,
+                isUrgent,
+            });
+        });
+    }
+
+    async receiveDocument({ documentId, userId, organizationId }: { documentId: string; userId: string; organizationId: string }): Promise<void> {
+        await this.db.transaction(async (tx) => {
+            const [doc] = await tx
+                .select()
+                .from(schema.documents)
+                .where(and(eq(schema.documents.id, documentId), eq(schema.documents.organizationId, organizationId)));
+
+            if (!doc) throw new Error('Documento no encontrado o sin acceso.');
+
+            await tx
+                .update(schema.documents)
+                .set({ status: 'RECIBIDO', currentUserId: userId, updatedAt: new Date() })
+                .where(eq(schema.documents.id, documentId));
+
+            await tx.insert(schema.documentHistory).values({
+                documentId,
+                toAreaId: doc.destinationAreaId ?? '',
+                userId,
+                toUserId: userId,
+                action: 'RECIBIR',
+                receptionStatus: 'RECIBIDO',
+                receivedAt: new Date(),
+            });
+        });
+    }
+
+    async rejectDocument({ documentId, userId, reason, organizationId }: { documentId: string; userId: string; reason: string; organizationId: string }): Promise<void> {
+        await this.db.transaction(async (tx) => {
+            const [doc] = await tx
+                .select()
+                .from(schema.documents)
+                .where(and(eq(schema.documents.id, documentId), eq(schema.documents.organizationId, organizationId)));
+
+            if (!doc) throw new Error('Documento no encontrado o sin acceso.');
+
+            await tx
+                .update(schema.documents)
+                .set({ status: 'RECHAZADO', updatedAt: new Date() })
+                .where(eq(schema.documents.id, documentId));
+
+            await tx.insert(schema.documentHistory).values({
+                documentId,
+                toAreaId: doc.destinationAreaId ?? '',
+                userId,
+                action: 'RECHAZAR',
+                receptionStatus: 'RECHAZADO',
+                rejectionReason: reason,
+            });
+        });
+    }
+
+    async cancelDerivation({ documentId, userId, organizationId }: { documentId: string; userId: string; organizationId: string }): Promise<void> {
+        await this.db.transaction(async (tx) => {
+            const [doc] = await tx
+                .select()
+                .from(schema.documents)
+                .where(and(eq(schema.documents.id, documentId), eq(schema.documents.organizationId, organizationId)));
+
+            if (!doc) throw new Error('Documento no encontrado o sin acceso.');
+
+            await tx
+                .update(schema.documents)
+                .set({ status: 'RECIBIDO', currentUserId: userId, updatedAt: new Date() })
+                .where(eq(schema.documents.id, documentId));
+
+            await tx.insert(schema.documentHistory).values({
+                documentId,
+                toAreaId: doc.destinationAreaId ?? '',
+                userId,
+                action: 'CANCELAR_DERIVACION',
+                receptionStatus: 'CANCELADO',
+            });
+        });
+    }
+
+    async justifyDelay({ documentId, userId, reason, organizationId }: { documentId: string; userId: string; reason: string; organizationId: string }): Promise<void> {
+        await this.db.transaction(async (tx) => {
+            const [doc] = await tx
+                .select()
+                .from(schema.documents)
+                .where(and(eq(schema.documents.id, documentId), eq(schema.documents.organizationId, organizationId)));
+
+            if (!doc) throw new Error('Documento no encontrado o sin acceso.');
+
+            await tx.insert(schema.documentHistory).values({
+                documentId,
+                toAreaId: doc.destinationAreaId ?? '',
+                userId,
+                action: 'JUSTIFICAR',
+                justificationReason: reason,
+            });
+        });
+    }
+
+    async groupDocuments({ mainDocumentId, secondaryDocumentIds, organizationId }: { mainDocumentId: string; secondaryDocumentIds: string[]; organizationId: string }): Promise<void> {
+        await this.db.transaction(async (tx) => {
+            for (const secId of secondaryDocumentIds) {
+                await tx
+                    .update(schema.documents)
+                    .set({ groupedIntoDocumentId: mainDocumentId, updatedAt: new Date() })
+                    .where(and(eq(schema.documents.id, secId), eq(schema.documents.organizationId, organizationId)));
+            }
+        });
+    }
+
+    async archiveDocument({ documentId, folderCategory, observations, organizationId }: { documentId: string; folderCategory: string; observations: string | null; organizationId: string }): Promise<void> {
+        await this.db.transaction(async (tx) => {
+            const [doc] = await tx
+                .select()
+                .from(schema.documents)
+                .where(and(eq(schema.documents.id, documentId), eq(schema.documents.organizationId, organizationId)));
+
+            if (!doc) throw new Error('Documento no encontrado o sin acceso.');
+
+            await tx
+                .update(schema.documents)
+                .set({ status: 'ARCHIVADO', folderCategory, archiveObservations: observations, updatedAt: new Date() })
+                .where(eq(schema.documents.id, documentId));
+
+            await tx.insert(schema.documentHistory).values({
+                documentId,
+                toAreaId: doc.destinationAreaId ?? '',
+                userId: doc.currentUserId ?? '',
+                action: 'ARCHIVAR',
+                comment: observations,
+            });
+        });
+    }
+
+    async unarchiveDocument({ documentId, organizationId }: { documentId: string; organizationId: string }): Promise<void> {
+        await this.db.transaction(async (tx) => {
+            const [doc] = await tx
+                .select()
+                .from(schema.documents)
+                .where(and(eq(schema.documents.id, documentId), eq(schema.documents.organizationId, organizationId)));
+
+            if (!doc) throw new Error('Documento no encontrado o sin acceso.');
+
+            await tx
+                .update(schema.documents)
+                .set({ status: 'RECIBIDO', folderCategory: null, archiveObservations: null, updatedAt: new Date() })
+                .where(eq(schema.documents.id, documentId));
+
+            await tx.insert(schema.documentHistory).values({
+                documentId,
+                toAreaId: doc.destinationAreaId ?? '',
+                userId: doc.currentUserId ?? '',
+                action: 'DESARCHIVAR',
+            });
         });
     }
 

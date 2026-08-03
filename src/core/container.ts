@@ -8,6 +8,13 @@ import { LoginUseCase } from '~/modules/auth/application/login.use-case.impl';
 import { CreateAreaUseCase } from '~/modules/gestion-documental/application/create-area.use-case.impl';
 import { DeleteAreaUseCase } from '~/modules/gestion-documental/application/delete-area.use-case.impl';
 import { DeriveDocumentUseCase } from '~/modules/gestion-documental/application/derive-document.use-case';
+import { ReceiveDocumentUseCase } from '~/modules/gestion-documental/application/receive-document.use-case';
+import { RejectDocumentUseCase } from '~/modules/gestion-documental/application/reject-document.use-case';
+import { CancelDerivationUseCase } from '~/modules/gestion-documental/application/cancel-derivation.use-case';
+import { JustifyDelayUseCase } from '~/modules/gestion-documental/application/justify-delay.use-case';
+import { GroupDocumentsUseCase } from '~/modules/gestion-documental/application/group-documents.use-case';
+import { ArchiveDocumentUseCase } from '~/modules/gestion-documental/application/archive-document.use-case';
+import { UnarchiveDocumentUseCase } from '~/modules/gestion-documental/application/unarchive-document.use-case';
 import { GetDocumentDetailsUseCase } from '~/modules/gestion-documental/application/get-document-details.use-case';
 import { GetDocumentHistoryUseCase } from '~/modules/gestion-documental/application/get-document-history.use-case';
 import { ListDocumentsUseCase } from '~/modules/gestion-documental/application/list-documents.use-case';
@@ -70,6 +77,27 @@ container.register(InjectionTokens.ListDocumentsUseCase, {
 });
 container.register(InjectionTokens.DeriveDocumentUseCase, {
     useClass: DeriveDocumentUseCase,
+});
+container.register(InjectionTokens.ReceiveDocumentUseCase, {
+    useClass: ReceiveDocumentUseCase,
+});
+container.register(InjectionTokens.RejectDocumentUseCase, {
+    useClass: RejectDocumentUseCase,
+});
+container.register(InjectionTokens.CancelDerivationUseCase, {
+    useClass: CancelDerivationUseCase,
+});
+container.register(InjectionTokens.JustifyDelayUseCase, {
+    useClass: JustifyDelayUseCase,
+});
+container.register(InjectionTokens.GroupDocumentsUseCase, {
+    useClass: GroupDocumentsUseCase,
+});
+container.register(InjectionTokens.ArchiveDocumentUseCase, {
+    useClass: ArchiveDocumentUseCase,
+});
+container.register(InjectionTokens.UnarchiveDocumentUseCase, {
+    useClass: UnarchiveDocumentUseCase,
 });
 
 // Register Area CRUD Use Cases

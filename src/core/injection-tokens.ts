@@ -11,6 +11,13 @@ export const InjectionTokens = {
     GetDocumentDetailsUseCase: Symbol('IGetDocumentDetailsUseCase'),
     ListDocumentsUseCase: Symbol('IListDocumentsUseCase'),
     DeriveDocumentUseCase: Symbol('IDeriveDocumentUseCase'),
+    ReceiveDocumentUseCase: Symbol('IReceiveDocumentUseCase'),
+    RejectDocumentUseCase: Symbol('IRejectDocumentUseCase'),
+    CancelDerivationUseCase: Symbol('ICancelDerivationUseCase'),
+    JustifyDelayUseCase: Symbol('IJustifyDelayUseCase'),
+    GroupDocumentsUseCase: Symbol('IGroupDocumentsUseCase'),
+    ArchiveDocumentUseCase: Symbol('IArchiveDocumentUseCase'),
+    UnarchiveDocumentUseCase: Symbol('IUnarchiveDocumentUseCase'),
     DocumentHistoryRepository: Symbol('IDocumentHistoryRepository'),
     GetDocumentHistoryUseCase: Symbol('IGetDocumentHistoryUseCase'),
     // Auth & Users

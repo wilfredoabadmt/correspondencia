@@ -10,6 +10,13 @@ class MockDocumentRepository implements IDocumentRepository {
     findDetailsById = vi.fn();
     findMany = vi.fn();
     derive = vi.fn();
+    receiveDocument = vi.fn();
+    rejectDocument = vi.fn();
+    cancelDerivation = vi.fn();
+    justifyDelay = vi.fn();
+    groupDocuments = vi.fn();
+    archiveDocument = vi.fn();
+    unarchiveDocument = vi.fn();
 }
 
 class MockStorageService implements IStorageService {
@@ -40,6 +47,10 @@ describe('GetDocumentDetailsUseCase', () => {
         destinationAreaId: 'area-456',
         destinationAreaName: 'Área de Pruebas',
         areaHierarchyId: 'area-456',
+        currentUserId: null,
+        groupedIntoDocumentId: null,
+        folderCategory: null,
+        archiveObservations: null,
         fileKey: 'uploads/test-file.pdf',
         downloadUrl: null,
         createdAt: new Date(),
