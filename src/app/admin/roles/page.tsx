@@ -1,8 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { SystemShell } from '~/components/layout/SystemShell';
+import {
+    fetchPersistentRoles,
+    createPersistentRole,
+    deletePersistentRole,
+    type PersistentRoleItem,
+} from './_actions';
 
 interface PermissionOption {
     id: string;
@@ -37,51 +43,10 @@ const PERMISSION_LABEL_MAP: Record<string, string> = ALL_PERMISSIONS.reduce((acc
     return acc;
 }, {} as Record<string, string>);
 
-interface RoleItem {
-    id: string;
-    name: string;
-    office: string;
-    isSystemRole: boolean;
-    permissions: string[];
-    description: string;
-}
-
 export default function RolesManagementPage() {
     const [selectedOffice, setSelectedOffice] = useState('Todas');
-    const [rolesList, setRolesList] = useState<RoleItem[]>([
-        {
-            id: 'role-1',
-            name: 'SUPERADMIN (Administrador Global)',
-            office: 'Oficina Nacional (La Paz)',
-            isSystemRole: true,
-            description: 'Control absoluto del sistema, creación de organizaciones y administración global de roles.',
-            permissions: ALL_PERMISSIONS.map(p => p.id),
-        },
-        {
-            id: 'role-2',
-            name: 'ADMINISTRADOR DE OFICINA',
-            office: 'Oficina Nacional (La Paz)',
-            isSystemRole: true,
-            description: 'Administración de usuarios, áreas y monitoreo gerencial de la Oficina Nacional.',
-            permissions: ['document.create', 'document.view.all', 'document.derive', 'user.manage', 'user.view', 'area.manage', 'role.view'],
-        },
-        {
-            id: 'role-3',
-            name: 'OPERADOR DE VENTANILLA',
-            office: 'Oficina Nacional (La Paz)',
-            isSystemRole: false,
-            description: 'Recepción de correspondencia externa, asignación de CITEs e impresión de Hojas de Ruta.',
-            permissions: ['document.create', 'document.view.own', 'document.derive', 'user.view', 'area.view'],
-        },
-        {
-            id: 'role-4',
-            name: 'DIRECTOR DE PLANIFICACIÓN',
-            office: 'Dirección Departamental Santa Cruz',
-            isSystemRole: false,
-            description: 'Supervisión de informes técnicos, aprobación de notas internas y derivación prioritaria.',
-            permissions: ['document.create', 'document.view.all', 'document.derive', 'document.approve', 'document.reject', 'user.view', 'area.view'],
-        },
-    ]);
+    const [rolesList, setRolesList] = useState<PersistentRoleItem[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newRoleName, setNewRoleName] = useState('');
@@ -89,6 +54,21 @@ export default function RolesManagementPage() {
     const [newRoleDescription, setNewRoleDescription] = useState('');
     const [selectedPermissionIds, setSelectedPermissionIds] = useState<string[]>([]);
     const [successMessage, setSuccessMessage] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+
+    const loadRoles = async () => {
+        try {
+            setLoading(true);
+            const data = await fetchPersistentRoles();
+            setRolesList(data);
+        } catch {
+            setRolesList([]);
+        } fontinally: () => setLoading(false);
+    };
+
+    useEffect(() => {
+        loadRoles();
+    }, []);
 
     const togglePermission = (permId: string) => {
         setSelectedPermissionIds(prev =>
@@ -104,33 +84,44 @@ export default function RolesManagementPage() {
         }
     };
 
-    const handleCreateRole = (e: React.FormEvent) => {
+    const handleCreateRole = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newRoleName.trim()) return;
 
-        const newRole: RoleItem = {
-            id: `role-${Date.now()}`,
-            name: newRoleName.trim().toUpperCase(),
-            office: newRoleOffice,
-            isSystemRole: false,
-            description: newRoleDescription || 'Rol personalizado asignado por Super Usuario.',
-            permissions: selectedPermissionIds,
-        };
+        try {
+            setSubmitting(true);
+            const newRole = await createPersistentRole(
+                newRoleName,
+                newRoleOffice,
+                newRoleDescription,
+                selectedPermissionIds
+            );
 
-        setRolesList([newRole, ...rolesList]);
-        setSuccessMessage(`¡Rol "${newRole.name}" creado con éxito para ${newRoleOffice}!`);
-        setIsCreateModalOpen(false);
+            setSuccessMessage(`¡Rol "${newRole.name}" creado con éxito para ${newRoleOffice}!`);
+            setIsCreateModalOpen(false);
 
-        // Reset form
-        setNewRoleName('');
-        setNewRoleDescription('');
-        setSelectedPermissionIds([]);
+            setNewRoleName('');
+            setNewRoleDescription('');
+            setSelectedPermissionIds([]);
 
-        setTimeout(() => setSuccessMessage(''), 5000);
+            await loadRoles();
+            setTimeout(() => setSuccessMessage(''), 5000);
+        } catch (err: any) {
+            setSuccessMessage(`Error al crear rol: ${err.message}`);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
-    const handleDeleteRole = (id: string) => {
-        setRolesList(rolesList.filter(r => r.id !== id));
+    const handleDeleteRole = async (id: string, rName: string) => {
+        if (!confirm(`¿Está seguro de eliminar el rol "${rName}"?`)) return;
+        try {
+            await deletePersistentRole(id);
+            setSuccessMessage(`Rol "${rName}" eliminado.`);
+            await loadRoles();
+        } catch (err: any) {
+            setSuccessMessage(`Error al eliminar: ${err.message}`);
+        }
     };
 
     const filteredRoles = selectedOffice === 'Todas' 
@@ -202,52 +193,56 @@ export default function RolesManagementPage() {
                 </div>
 
                 {/* Roles Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {filteredRoles.map((role) => (
-                        <div key={role.id} className="glass-panel-glow p-6 rounded-3xl space-y-4 relative border border-slate-800 hover:border-cyan-500/40 transition-all">
-                            <div className="flex items-start justify-between gap-3">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="text-lg font-bold text-white">{role.name}</h3>
-                                        {role.isSystemRole && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-950 text-blue-300 border border-blue-500/30">
-                                                Sistema
-                                            </span>
-                                        )}
+                {loading ? (
+                    <div className="p-12 text-center text-slate-400 font-mono text-xs">Cargando roles registrados...</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {filteredRoles.map((role) => (
+                            <div key={role.id} className="glass-panel-glow p-6 rounded-3xl space-y-4 relative border border-slate-800 hover:border-cyan-500/40 transition-all">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-lg font-bold text-white">{role.name}</h3>
+                                            {role.isSystemRole && (
+                                                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-950 text-blue-300 border border-blue-500/30">
+                                                    Sistema
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-cyan-400 font-mono mt-1">📍 {role.office}</p>
                                     </div>
-                                    <p className="text-xs text-cyan-400 font-mono mt-1">📍 {role.office}</p>
+
+                                    {!role.isSystemRole && (
+                                        <button
+                                            onClick={() => handleDeleteRole(role.id, role.name)}
+                                            className="text-xs text-rose-400 hover:text-rose-300 p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
+                                            title="Eliminar Rol"
+                                        >
+                                            🗑️
+                                        </button>
+                                    )}
                                 </div>
 
-                                {!role.isSystemRole && (
-                                    <button
-                                        onClick={() => handleDeleteRole(role.id)}
-                                        className="text-xs text-rose-400 hover:text-rose-300 p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
-                                        title="Eliminar Rol"
-                                    >
-                                        🗑️
-                                    </button>
-                                )}
+                                <p className="text-xs text-slate-300 leading-relaxed">
+                                    {role.description}
+                                </p>
+
+                                <div className="pt-3 border-t border-slate-800/80 space-y-2">
+                                    <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
+                                        Permisos Habilitados ({role.permissions.length}):
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {role.permissions.map(pId => (
+                                            <span key={pId} className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-900 text-cyan-300 border border-slate-700 shadow-sm">
+                                                {PERMISSION_LABEL_MAP[pId] || pId}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-
-                            <p className="text-xs text-slate-300 leading-relaxed">
-                                {role.description}
-                            </p>
-
-                            <div className="pt-3 border-t border-slate-800/80 space-y-2">
-                                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
-                                    Permisos Habilitados ({role.permissions.length}):
-                                </div>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {role.permissions.map(pId => (
-                                        <span key={pId} className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-900 text-cyan-300 border border-slate-700 shadow-sm">
-                                            {PERMISSION_LABEL_MAP[pId] || pId}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Create Role Modal */}
                 {isCreateModalOpen && (
@@ -271,7 +266,7 @@ export default function RolesManagementPage() {
                                         required
                                         value={newRoleName}
                                         onChange={(e) => setNewRoleName(e.target.value)}
-                                        placeholder="Ej: RESPONSABLE DE ARCHIVO Y CUSTODIA"
+                                        placeholder="Ej: SECRETARIA"
                                         className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:border-cyan-500 outline-none"
                                     />
                                 </div>
@@ -301,10 +296,10 @@ export default function RolesManagementPage() {
                                     />
                                 </div>
 
-                                {/* Permissions Matrix with HUMAN TITLES ONLY */}
+                                {/* Permissions Matrix */}
                                 <div className="space-y-3 pt-2">
                                     <div className="flex items-center justify-between">
-                                        <label className="block text-xs font-bold text-cyan-400 uppercase tracking-wider">Asignación de Permisos Institucionales:</label>
+                                        <label className="block text-xs font-bold text-cyan-400 uppercase tracking-wider">Asignación de Permisos Granulares:</label>
                                         <button
                                             type="button"
                                             onClick={handleSelectAllPermissions}
@@ -353,9 +348,10 @@ export default function RolesManagementPage() {
                                     </button>
                                     <button
                                         type="submit"
+                                        disabled={submitting}
                                         className="px-6 py-2.5 rounded-xl font-bold text-xs text-white uppercase tracking-wider bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition-all"
                                     >
-                                        Guardar Rol
+                                        {submitting ? 'Guardando...' : 'GUARDAR ROL'}
                                     </button>
                                 </div>
                             </form>
