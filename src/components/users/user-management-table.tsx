@@ -1,55 +1,220 @@
 'use client';
 
 import * as React from 'react';
-import type { User } from '~/modules/users/core/user.repository';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
+import type { User, UserRole } from '~/modules/users/core/user.repository';
+import { createUser, deleteUser } from '~/app/admin/users/_actions';
 
 type UserManagementTableProps = {
     initialUsers: User[];
 };
 
 export function UserManagementTable({ initialUsers }: UserManagementTableProps) {
-    // En el futuro, aquí se gestionaría el estado de los usuarios, actualizaciones, etc.
-    const [users, setUsers] = React.useState(initialUsers);
+    const [users, setUsers] = React.useState<User[]>(initialUsers);
+    const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
+    const [name, setName] = React.useState('');
+    const [email, setEmail] = React.useState('');
+    const [role, setRole] = React.useState<UserRole>('OPERADOR');
+    const [loading, setLoading] = React.useState(false);
+    const [message, setMessage] = React.useState<string | null>(null);
+
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!name.trim() || !email.trim()) return;
+
+        try {
+            setLoading(true);
+            setMessage(null);
+            const result = await createUser(name.trim(), email.trim(), role);
+            
+            const newUser: User = (result.user as any) || {
+                id: `usr-${Date.now()}`,
+                name: name.trim(),
+                email: email.trim(),
+                role,
+                organizationId: 'org_12345',
+                roleId: null,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+
+            setUsers(prev => [newUser, ...prev]);
+            setMessage(`¡Usuario "${newUser.name}" creado con éxito! Contraseña temporal: ${result.temporaryPassword || 'TempPass123'}`);
+            setIsCreateModalOpen(false);
+            setName('');
+            setEmail('');
+            setRole('OPERADOR');
+        } catch (err: any) {
+            setMessage(`Error al crear usuario: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteUser = async (id: string, userName?: string | null) => {
+        const displayName = userName || 'Usuario';
+        if (!confirm(`¿Está seguro de eliminar la cuenta del usuario "${displayName}"?`)) return;
+
+        try {
+            await deleteUser(id);
+            setUsers(prev => prev.filter(u => u.id !== id));
+            setMessage(`Usuario "${displayName}" eliminado.`);
+        } catch (err: any) {
+            setMessage(`Error al eliminar: ${err.message}`);
+        }
+    };
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Usuarios de la Organización</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Nombre</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Rol</TableHead>
-                            <TableHead className="text-right">Acciones</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {users.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                    No hay usuarios registrados en esta organización.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            users.map((user) => (
-                                <TableRow key={user.id}>
-                                    <TableCell className="font-medium">{user.name}</TableCell>
-                                    <TableCell>{user.email}</TableCell>
-                                    <TableCell>{user.role}</TableCell>
-                                    <TableCell className="text-right">
-                                        {/* TODO: Botones de Editar y Eliminar */}
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+        <div className="space-y-6">
+            {/* Top Toolbar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass-panel p-5 rounded-2xl">
+                <div>
+                    <h3 className="text-base font-bold text-white">Directorio de Usuarios de la Organización</h3>
+                    <p className="text-xs text-slate-300">Total registrados: <span className="text-cyan-400 font-mono font-bold">{users.length}</span> usuarios</p>
+                </div>
+
+                <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all transform hover:-translate-y-0.5"
+                >
+                    <span>+ Crear Nuevo Usuario</span>
+                </button>
+            </div>
+
+            {/* Notification alert */}
+            {message && (
+                <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-medium flex items-center justify-between gap-3">
+                    <span className="font-mono">{message}</span>
+                    <button onClick={() => setMessage(null)} className="text-slate-400 hover:text-white font-bold">✕</button>
+                </div>
+            )}
+
+            {/* User Table */}
+            <div className="glass-panel-glow rounded-3xl p-6 border border-slate-800 overflow-hidden shadow-2xl">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                        <thead className="border-b border-slate-800 text-slate-300 uppercase font-mono">
+                            <tr>
+                                <th className="py-3 px-4 font-semibold">Nombre Completo</th>
+                                <th className="py-3 px-4 font-semibold">Correo Electrónico</th>
+                                <th className="py-3 px-4 font-semibold">Rol Asignado</th>
+                                <th className="py-3 px-4 font-semibold text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                            {users.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="py-12 text-center text-slate-400">
+                                        No hay usuarios registrados en esta organización.
+                                    </td>
+                                </tr>
+                            ) : (
+                                users.map((user) => {
+                                    const displayName = user.name || 'Sin Nombre';
+                                    return (
+                                        <tr key={user.id} className="hover:bg-slate-900/60 transition-colors">
+                                            <td className="py-3.5 px-4 font-bold text-white flex items-center gap-2">
+                                                <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-mono font-bold text-cyan-400">
+                                                    {displayName.substring(0, 1).toUpperCase()}
+                                                </div>
+                                                <span>{displayName}</span>
+                                            </td>
+                                            <td className="py-3.5 px-4 text-cyan-300 font-mono">{user.email}</td>
+                                            <td className="py-3.5 px-4">
+                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase ${
+                                                    user.role === 'SUPERADMIN'
+                                                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                                        : user.role === 'ADMINISTRADOR'
+                                                            ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                                                            : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                                                }`}>
+                                                    {user.role}
+                                                </span>
+                                            </td>
+                                            <td className="py-3.5 px-4 text-right">
+                                                <button
+                                                    onClick={() => handleDeleteUser(user.id, user.name)}
+                                                    className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-medium transition-colors"
+                                                    title="Eliminar Usuario"
+                                                >
+                                                    Eliminar 🗑️
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Create User Modal */}
+            {isCreateModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+                    <div className="w-full max-w-md glass-panel-glow rounded-3xl p-6 space-y-5 border border-cyan-500/40 shadow-2xl animate-fadeIn">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <h3 className="text-lg font-bold text-white">Crear Nuevo Usuario</h3>
+                            <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400 hover:text-white font-bold">✕</button>
+                        </div>
+
+                        <form onSubmit={handleCreateUser} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1">Nombre Completo</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Ej. Ing. Roberto Mamani"
+                                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1">Correo Electrónico</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="ejemplo@aevivienda.gob.bo"
+                                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1">Rol Asignado</label>
+                                <select
+                                    value={role}
+                                    onChange={(e) => setRole(e.target.value as UserRole)}
+                                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
+                                >
+                                    <option value="OPERADOR">OPERADOR (Servidor Público / Ventanilla)</option>
+                                    <option value="ADMINISTRADOR">ADMINISTRADOR (Jefe de Oficina)</option>
+                                    <option value="SUPERADMIN">SUPERADMIN (Administrador de Sistema)</option>
+                                </select>
+                            </div>
+
+                            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-800">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCreateModalOpen(false)}
+                                    className="px-4 py-2 rounded-xl font-semibold text-xs text-slate-400 hover:text-white bg-slate-900"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="px-5 py-2 rounded-xl font-bold text-xs text-white uppercase tracking-wider bg-blue-600 hover:bg-blue-500 shadow-md"
+                                >
+                                    {loading ? 'Creando...' : 'Crear Usuario'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }

@@ -2,7 +2,7 @@ import { createId } from '@paralleldrive/cuid2';
 import { pgTable, text, timestamp, integer, pgEnum, boolean } from 'drizzle-orm/pg-core';
 import { index, uniqueIndex, foreignKey, primaryKey } from 'drizzle-orm/pg-core';
 
-export const roleEnum = pgEnum('role', ['OPERADOR', 'ADMINISTRADOR']);
+export const roleEnum = pgEnum('role', ['OPERADOR', 'ADMINISTRADOR', 'SUPERADMIN']);
 
 export const organizations = pgTable('organizations', {
     id: text('id').primaryKey().$defaultFn(() => createId()),

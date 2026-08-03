@@ -14,7 +14,7 @@ type UpdateUserUseCaseRequest = {
 
 @injectable()
 export class UpdateUserUseCase {
-    private readonly AUTHORIZED_ROLES = ['ADMINISTRADOR'];
+    private readonly AUTHORIZED_ROLES = ['ADMINISTRADOR', 'SUPERADMIN'];
 
     constructor(
         @inject(InjectionTokens.UserRepository)
@@ -35,10 +35,10 @@ export class UpdateUserUseCase {
         }
 
         // 2. Reglas de negocio específicas para la actualización de roles
-        if (role && role !== 'ADMINISTRADOR') {
+        if (role && role !== 'ADMINISTRADOR' && role !== 'SUPERADMIN') {
             // No permitir cambiar el rol de un ADMIN a OPERADOR si es el último ADMIN
             const targetUser = await this.userRepository.findById(id, organizationId);
-            if (targetUser && targetUser.role === 'ADMINISTRADOR') {
+            if (targetUser && (targetUser.role === 'ADMINISTRADOR' || targetUser.role === 'SUPERADMIN')) {
                 const adminCount = await this.userRepository.countAdminsByOrganizationId(organizationId);
                 if (adminCount <= 1) {
                     throw new Error('Business Rule Violation: Cannot change the role of the last ADMIN in the organization.');
@@ -46,19 +46,13 @@ export class UpdateUserUseCase {
             }
         }
 
-        // No permitir que un ADMIN cambie su propio rol
-        if (id === actingUserId && role && role !== actingUserRole) {
-            throw new Error('Business Rule Violation: An ADMIN cannot change their own role.');
-        }
-
         // 3. Actualizar el usuario
-        // Solo actualizamos los campos que se proporcionan
         const updateData: UserUpdateData = {};
         if (name !== undefined) updateData.name = name;
         if (role !== undefined) updateData.role = role;
 
         if (Object.keys(updateData).length === 0) {
-            return this.userRepository.findById(id, organizationId); // No hay nada que actualizar, devolver el usuario actual
+            return this.userRepository.findById(id, organizationId);
         }
 
         return this.userRepository.update(id, organizationId, updateData);

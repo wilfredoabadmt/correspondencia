@@ -10,7 +10,7 @@ type ListUsersUseCaseRequest = {
 
 @injectable()
 export class ListUsersUseCase {
-    private readonly AUTHORIZED_ROLES = ['ADMINISTRADOR'];
+    private readonly AUTHORIZED_ROLES = ['ADMINISTRADOR', 'SUPERADMIN'];
 
     constructor(
         @inject(InjectionTokens.UserRepository)

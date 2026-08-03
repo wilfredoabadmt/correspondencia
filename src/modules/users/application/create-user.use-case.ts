@@ -10,8 +10,8 @@ type CreateUserUseCaseRequest = {
     email: string;
     role: UserRole;
     organizationId: string;
-    actingUserId: string; // ID del usuario que realiza la acción (ADMIN)
-    actingUserRole: string; // Rol del usuario que realiza la acción (ADMIN)
+    actingUserId: string; // ID del usuario que realiza la acción (ADMIN/SUPERADMIN)
+    actingUserRole: string; // Rol del usuario que realiza la acción (ADMIN/SUPERADMIN)
 };
 
 type CreateUserUseCaseResponse = {
@@ -21,7 +21,7 @@ type CreateUserUseCaseResponse = {
 
 @injectable()
 export class CreateUserUseCase {
-    private readonly AUTHORIZED_ROLES = ['ADMINISTRADOR'];
+    private readonly AUTHORIZED_ROLES = ['ADMINISTRADOR', 'SUPERADMIN'];
     private readonly BCRYPT_SALT_ROUNDS = 10; // Número de rondas de sal para bcrypt
 
     constructor(
