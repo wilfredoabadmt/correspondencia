@@ -6,30 +6,36 @@ import { SystemShell } from '~/components/layout/SystemShell';
 
 interface PermissionOption {
     id: string;
-    label: string;
+    title: string;
+    description: string;
     category: 'document' | 'user' | 'area' | 'role' | 'settings';
 }
 
 const ALL_PERMISSIONS: PermissionOption[] = [
-    { id: 'document.create', label: 'Crear nuevos documentos y CITEs', category: 'document' },
-    { id: 'document.view.all', label: 'Ver todos los documentos de la oficina', category: 'document' },
-    { id: 'document.view.own', label: 'Ver solo documentos asignados a su usuario', category: 'document' },
-    { id: 'document.derive', label: 'Derivar documentos a otras áreas / personas', category: 'document' },
-    { id: 'document.approve', label: 'Aprobar documentos y dar Visto Bueno', category: 'document' },
-    { id: 'document.reject', label: 'Rechazar solicitudes con justificación', category: 'document' },
-    { id: 'document.delete', label: 'Eliminar o anular documentos', category: 'document' },
+    { id: 'document.create', title: '📄 Crear Documentos y CITEs', description: 'Elaboración de Informes, Notas Internas, Cartas y Circulares', category: 'document' },
+    { id: 'document.view.all', title: '👁️ Ver Toda la Correspondencia', description: 'Acceso a la totalidad de trámites de la oficina', category: 'document' },
+    { id: 'document.view.own', title: '👤 Ver Solo Trámites Propios', description: 'Acceso exclusivo a documentos asignados a su usuario', category: 'document' },
+    { id: 'document.derive', title: '📤 Derivar Documentos', description: 'Derivación oficial hacia otras dependencias y personal', category: 'document' },
+    { id: 'document.approve', title: '✅ Aprobar y Dar Visto Bueno', description: 'Firma y aprobación formal de notas e informes', category: 'document' },
+    { id: 'document.reject', title: '❌ Rechazar Solicitudes', description: 'Rechazo motivado de trámites por falta de requisitos', category: 'document' },
+    { id: 'document.delete', title: '🗑️ Eliminar / Anular Registros', description: 'Dar de baja o anular trámites y Hojas de Ruta', category: 'document' },
     
-    { id: 'user.manage', label: 'Crear, editar y dar de baja usuarios', category: 'user' },
-    { id: 'user.view', label: 'Ver listado de personal por unidad', category: 'user' },
+    { id: 'user.manage', title: '👥 Gestionar Cuentas de Usuarios', description: 'Creación, modificación y deshabilitación de personal', category: 'user' },
+    { id: 'user.view', title: '📋 Ver Directorio de Personal', description: 'Consulta del listado de funcionarios por unidad', category: 'user' },
 
-    { id: 'area.manage', label: 'Gestionar organigrama y jerarquías de área', category: 'area' },
-    { id: 'area.view', label: 'Ver estructura organizacional de la entidad', category: 'area' },
+    { id: 'area.manage', title: '🏢 Gestionar Organigrama y Áreas', description: 'Configuración de jerarquías y dependencias de la entidad', category: 'area' },
+    { id: 'area.view', title: '🔍 Ver Estructura Organizacional', description: 'Consulta del mapa institucional de oficinas', category: 'area' },
 
-    { id: 'role.manage', label: 'Crear y editar roles de usuario por oficina', category: 'role' },
-    { id: 'role.view', label: 'Ver matriz de roles y sus permisos', category: 'role' },
+    { id: 'role.manage', title: '🛡️ Administrar Roles por Oficina', description: 'Creación y personalización de permisos por perfil', category: 'role' },
+    { id: 'role.view', title: '📜 Ver Matriz de Roles y Permisos', description: 'Consulta de perfiles y privilegios vigentes', category: 'role' },
 
-    { id: 'organization.settings.manage', label: 'Configurar parámetros globales de entidad', category: 'settings' },
+    { id: 'organization.settings.manage', title: '⚙️ Configuración Institucional Global', description: 'Ajuste de parámetros globales de la organización', category: 'settings' },
 ];
+
+const PERMISSION_LABEL_MAP: Record<string, string> = ALL_PERMISSIONS.reduce((acc, perm) => {
+    acc[perm.id] = perm.title;
+    return acc;
+}, {} as Record<string, string>);
 
 interface RoleItem {
     id: string;
@@ -150,7 +156,7 @@ export default function RolesManagementPage() {
                                 </span>
                             </div>
                             <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                                Defina y personalice roles con permisos estrictos para distintas dependencias y personal institucional.
+                                Defina y personalice roles con permisos estrictos en español para distintas dependencias y personal institucional.
                             </p>
                         </div>
                     </div>
@@ -229,12 +235,12 @@ export default function RolesManagementPage() {
 
                             <div className="pt-3 border-t border-slate-800/80 space-y-2">
                                 <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
-                                    Permisos Asignados ({role.permissions.length}):
+                                    Permisos Habilitados ({role.permissions.length}):
                                 </div>
                                 <div className="flex flex-wrap gap-1.5">
                                     {role.permissions.map(pId => (
-                                        <span key={pId} className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-900 text-slate-300 border border-slate-800">
-                                            {pId}
+                                        <span key={pId} className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-900 text-cyan-300 border border-slate-700 shadow-sm">
+                                            {PERMISSION_LABEL_MAP[pId] || pId}
                                         </span>
                                     ))}
                                 </div>
@@ -259,13 +265,13 @@ export default function RolesManagementPage() {
 
                             <form onSubmit={handleCreateRole} className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-300 mb-1">Nombre del Rol (Ej: RESPONSABLE_ARCHIVADO)</label>
+                                    <label className="block text-xs font-medium text-slate-300 mb-1">Nombre del Rol</label>
                                     <input
                                         type="text"
                                         required
                                         value={newRoleName}
                                         onChange={(e) => setNewRoleName(e.target.value)}
-                                        placeholder="Ej: JEFE DE UNIDAD JURÍDICA"
+                                        placeholder="Ej: RESPONSABLE DE ARCHIVO Y CUSTODIA"
                                         className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:border-cyan-500 outline-none"
                                     />
                                 </div>
@@ -290,35 +296,35 @@ export default function RolesManagementPage() {
                                         rows={2}
                                         value={newRoleDescription}
                                         onChange={(e) => setNewRoleDescription(e.target.value)}
-                                        placeholder="Describa el propósito y alcance de este rol..."
+                                        placeholder="Describa el propósito y alcance de este rol institucional..."
                                         className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
                                     />
                                 </div>
 
-                                {/* Permissions Matrix */}
+                                {/* Permissions Matrix with HUMAN TITLES ONLY */}
                                 <div className="space-y-3 pt-2">
                                     <div className="flex items-center justify-between">
-                                        <label className="block text-xs font-bold text-cyan-400">Selección de Permisos Granulares:</label>
+                                        <label className="block text-xs font-bold text-cyan-400 uppercase tracking-wider">Asignación de Permisos Institucionales:</label>
                                         <button
                                             type="button"
                                             onClick={handleSelectAllPermissions}
-                                            className="text-xs text-slate-300 hover:text-white underline"
+                                            className="text-xs text-slate-300 hover:text-white underline font-semibold"
                                         >
                                             {selectedPermissionIds.length === ALL_PERMISSIONS.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
                                         </button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto p-3 rounded-2xl bg-slate-950/80 border border-slate-800 no-scrollbar">
                                         {ALL_PERMISSIONS.map((perm) => {
                                             const isChecked = selectedPermissionIds.includes(perm.id);
                                             return (
                                                 <label
                                                     key={perm.id}
                                                     onClick={() => togglePermission(perm.id)}
-                                                    className={`p-2.5 rounded-lg border text-xs cursor-pointer flex items-start gap-2.5 transition-all ${
+                                                    className={`p-3 rounded-xl border text-xs cursor-pointer flex items-start gap-2.5 transition-all ${
                                                         isChecked
-                                                            ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-200'
-                                                            : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                                                            ? 'bg-cyan-500/15 border-cyan-500/50 text-white shadow-md'
+                                                            : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:text-white hover:border-slate-700'
                                                     }`}
                                                 >
                                                     <input
@@ -328,8 +334,8 @@ export default function RolesManagementPage() {
                                                         className="mt-0.5 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-0"
                                                     />
                                                     <div>
-                                                        <div className="font-mono font-bold text-[11px]">{perm.id}</div>
-                                                        <div className="text-[10px] text-slate-400">{perm.label}</div>
+                                                        <div className="font-bold text-xs text-white">{perm.title}</div>
+                                                        <div className="text-[10px] text-slate-300 mt-0.5">{perm.description}</div>
                                                     </div>
                                                 </label>
                                             );
