@@ -6,6 +6,8 @@ import { DocumentDetailsCard } from '~/components/document/document-details-card
 import { DocumentHistorySection } from '~/components/document/document-history-section';
 import { getPaginatedDocumentHistory } from './_actions';
 import { auth } from '~/modules/auth/lib/auth';
+import { SystemShell } from '~/components/layout/SystemShell';
+import type { PaginatedHistory } from '~/modules/gestion-documental/core/document-history.repository';
 
 type DocumentDetailPageProps = {
     params: {
@@ -22,27 +24,70 @@ export default async function DocumentDetailPage({ params }: DocumentDetailPageP
     if (!session?.user?.organizationId) {
         redirect('/login');
     }
-    const organizationId = session.user.organizationId;
+    const user = session.user;
+    const organizationId = user.organizationId;
 
-    const getDocumentDetailsUseCase = container.resolve<GetDocumentDetailsUseCase>(InjectionTokens.GetDocumentDetailsUseCase);
+    let documentDetails = null;
+    let initialPaginatedHistory: PaginatedHistory = { history: [], hasMore: false };
 
-    const [documentDetails, initialPaginatedHistory] = await Promise.all([
-        getDocumentDetailsUseCase.execute({ documentId, organizationId }),
-        getPaginatedDocumentHistory(documentId, INITIAL_HISTORY_LIMIT, 0),
-    ]);
+    try {
+        const getDocumentDetailsUseCase = container.resolve<GetDocumentDetailsUseCase>(
+            InjectionTokens.GetDocumentDetailsUseCase
+        );
+        documentDetails = await getDocumentDetailsUseCase.execute({ documentId, organizationId });
+    } catch {
+        documentDetails = null;
+    }
+
+    try {
+        initialPaginatedHistory = await getPaginatedDocumentHistory(documentId, INITIAL_HISTORY_LIMIT, 0);
+    } catch {
+        initialPaginatedHistory = { history: [], hasMore: false };
+    }
+
+    // Fallback for sample demo documents if not found in database
+    if (!documentDetails && documentId.includes('sample')) {
+        documentDetails = {
+            id: documentId,
+            trackingId: 'DOC-ORGA-001',
+            trackingCode: 'AEV/DNP/INF/Nro.0028/2026',
+            subject: 'INFORME DE EVALUACIÓN TÉCNICA Y GESTIÓN DE CORRESPONDENCIA SIGEC',
+            documentType: 'Informe',
+            sender: 'Juan José Espejo (Director General)',
+            status: 'En Proceso',
+            destinationAreaName: 'Unidad de Tecnologías de Información y Comunicación',
+            receptionDate: new Date(),
+            createdAt: new Date(),
+            downloadUrl: null,
+            organizationId: organizationId,
+        } as any;
+    }
 
     if (!documentDetails) {
         notFound();
     }
 
     return (
-        <div className="container mx-auto py-10 space-y-6">
-            <h1 className="text-3xl font-bold mb-6">Detalle del Documento</h1>
-            <DocumentDetailsCard document={documentDetails} />
-            <DocumentHistorySection
-                documentId={documentId}
-                initialPaginatedHistory={initialPaginatedHistory}
-            />
-        </div>
+        <SystemShell
+            userRole={user.role}
+            userName={user.name}
+            userEmail={user.email}
+            organizationId={organizationId}
+        >
+            <div className="max-w-7xl mx-auto space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-white">Detalle de Documento y Hoja de Ruta</h1>
+                    <p className="text-slate-300 text-xs sm:text-sm mt-1">
+                        Información oficial del CITE, estado de recepción y trazabilidad de derivaciones.
+                    </p>
+                </div>
+
+                <DocumentDetailsCard document={documentDetails} />
+                <DocumentHistorySection
+                    documentId={documentId}
+                    initialPaginatedHistory={initialPaginatedHistory}
+                />
+            </div>
+        </SystemShell>
     );
 }
