@@ -31,15 +31,15 @@ A continuación se presenta el desglose de tareas para la implementación de la 
     - [x] Crear el nuevo directorio de módulo en `src/modules/expedientes`.
     - [x] Añadir un nuevo enlace "Expedientes" en el menú de navegación principal del dashboard (ej. en `src/components/layout/sidebar.tsx` o similar).
 
-- [ ] **Tarea 2.2: Implementar la Página de Listado de Expedientes**
-    - [ ] Crear la ruta y el componente de página en `src/app/dashboard/expedientes/page.tsx`.
-    - [ ] Implementar un componente `ExpedientesDataTable` que consuma la API `GET /api/expedientes` y muestre los resultados en una tabla.
-    - [ ] Implementar un `CrearExpedienteModal` que contenga el formulario para crear un nuevo expediente a través de la API `POST /api/expedientes`.
+- [x] **Tarea 2.2: Implementar la Página de Listado de Expedientes**
+    - [x] Crear la ruta y el componente de página en `src/app/dashboard/expedientes/page.tsx`.
+    - [x] Implementar un componente `ExpedientesDataTable` que consuma la API `GET /api/expedientes` y muestre los resultados en una tabla.
+    - [x] Implementar un `CrearExpedienteModal` que contenga el formulario para crear un nuevo expediente a través de la API `POST /api/expedientes`.
 
-- [ ] **Tarea 2.3: Implementar la Página de Detalle de Expediente**
-    - [ ] Crear la ruta y el componente de página en `src/app/dashboard/expedientes/[id]/page.tsx`.
-    - [ ] Implementar la vista que muestre la información de cabecera del expediente.
-    - [ ] Implementar una tabla o lista que muestre los documentos asociados, consumiendo la API `GET /api/expedientes/[id]`. Cada item debe ser un enlace al detalle del documento correspondiente.
+- [x] **Tarea 2.3: Implementar la Página de Detalle de Expediente**
+    - [x] Crear la ruta y el componente de página en `src/app/dashboard/expedientes/[id]/page.tsx`.
+    - [x] Implementar la vista que muestre la información de cabecera del expediente.
+    - [x] Implementar una tabla o lista que muestre los documentos asociados, consumiendo la API `GET /api/expedientes/[id]`. Cada item debe ser un enlace al detalle del documento correspondiente.
 
 - [ ] **Tarea 2.4: Implementar la Lógica de Asociación en la UI**
     - [ ] Identificar las vistas de documentos existentes donde se debe añadir la opción "Asociar a Expediente".

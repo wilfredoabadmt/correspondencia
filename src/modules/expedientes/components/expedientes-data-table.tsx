@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
     flexRender,
     getCoreRowModel,
@@ -31,6 +32,14 @@ export const columns: ColumnDef<Expediente>[] = [
     {
         accessorKey: 'code',
         header: 'Código',
+        cell: ({ row }) => {
+            const expediente = row.original;
+            return (
+                <Link href={`/dashboard/expedientes/${expediente.id}`} className="text-blue-600 hover:underline">
+                    {expediente.code}
+                </Link>
+            );
+        },
     },
     {
         accessorKey: 'subject',
