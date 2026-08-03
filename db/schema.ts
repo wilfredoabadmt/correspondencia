@@ -112,6 +112,25 @@ export const documentTypes = pgTable('document_types', {
     name: text('name'),
 });
 
+export const expedientes = pgTable('expedientes', {
+    id: text('id').primaryKey().$defaultFn(() => createId()),
+    code: text('code').notNull(), // Ej. EXP-2026-0001
+    subject: text('subject').notNull(),
+    status: text('status').default('Abierto').notNull(), // Posibles valores: 'Abierto', 'Cerrado', 'Archivado'
+    organizationId: text('organization_id').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        organizationIdIdx: index('idx_expedientes_organization_id').on(table.organizationId),
+        codeOrgIdUniqueIdx: uniqueIndex('idx_expedientes_code_org_id').on(table.code, table.organizationId),
+        organizationFk: foreignKey({
+            columns: [table.organizationId],
+            foreignColumns: [organizations.id],
+        }).onDelete('cascade'),
+    };
+});
+
 export const documents = pgTable('documents', {
     id: text('id').primaryKey().$defaultFn(() => createId()),
     trackingId: text('tracking_id'),
@@ -130,6 +149,7 @@ export const documents = pgTable('documents', {
     archiveObservations: text('archive_observations'),
     fileKey: text('file_key'),
     downloadUrl: text('download_url'),
+    expedienteId: text('expediente_id'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => {
@@ -148,6 +168,11 @@ export const documents = pgTable('documents', {
             columns: [table.organizationId],
             foreignColumns: [organizations.id],
         }).onDelete('cascade'),
+        expedienteIdIdx: index('idx_documents_expediente_id').on(table.expedienteId),
+        expedienteFk: foreignKey({
+            columns: [table.expedienteId],
+            foreignColumns: [expedientes.id],
+        }).onDelete('set null'),
     };
 });
 

@@ -23,6 +23,7 @@ export function Sidebar({ userRole }: SidebarProps) {
         { href: '/reports', label: 'Reportes Gerenciales' },
         { href: '/profile', label: 'Mi Perfil' },
         { href: '/documents', label: 'Documentos' },
+        { href: '/dashboard/expedientes', label: 'Expedientes' },
         { href: '/admin/users', label: 'Gestión de Usuarios', requiredRoles: ADMIN_ROLES },
     ];
 

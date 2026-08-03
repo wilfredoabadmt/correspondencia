@@ -1,0 +1,20 @@
+'use client';
+
+import * as React from 'react';
+import { ExpedientesDataTable } from '~/modules/expedientes/components/expedientes-data-table';
+
+// TODO: Estos datos serán cargados desde la API.
+const MOCK_DATA = [];
+
+export default function ExpedientesPage() {
+    return (
+        <div className="container mx-auto py-10">
+            <h1 className="text-2xl font-bold mb-4">Gestión de Expedientes</h1>
+            <p className="mb-6">Aquí se mostrará el listado de expedientes.</p>
+            
+            <ExpedientesDataTable data={MOCK_DATA} />
+
+            {/* Próximamente: CrearExpedienteModal */}
+        </div>
+    );
+}

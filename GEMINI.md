@@ -2,12 +2,13 @@
 
 > Este `GEMINI.md` es el **archivo de contexto persistente para Gemini CLI**. Define las reglas operativas, el stack y el flujo de trabajo para este repositorio. No es un prompt para el chat web.
 
-## 1. Feature Activa: 016-perfil-usuario-destinatarios-frecuentes
+## 1. Feature Activa: 017-gestion-expedientes-virtuales
 
 - **Constitución**: `.specify/memory/constitution.md`
-- **Spec**: `specs/016-perfil-usuario-destinatarios-frecuentes/spec.md`
+- **Spec**: `specs/017-gestion-expedientes-virtuales/spec.md`
 
 ## Features Previas (archivadas en `specs/`)
+- **016-perfil-usuario-destinatarios-frecuentes**: Implementado el perfil de usuario y la gestión de una libreta de destinatarios frecuentes para agilizar las derivaciones.
 - **015-reportes-gerenciales-monitoreo**: Módulo de consulta gerencial, monitoreo y exportaciones Excel/PDF.
 - **014-control-plazos-semaforos**: Control de plazos, semáforos de mora y notificaciones de vencimiento.
 - **013-plantillas-word-hoja-ruta-pdf**: Generación de plantillas Word pre-llenadas e impresión de Hoja de Ruta Oficial PDF.

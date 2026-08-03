@@ -15,6 +15,13 @@
       "when": 1785735411530,
       "tag": "0001_superb_the_twelve",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785771002654,
+      "tag": "0002_strange_spencer_smythe",
+      "breakpoints": true
     }
   ]
 }
