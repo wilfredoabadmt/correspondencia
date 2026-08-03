@@ -46,6 +46,8 @@ export function Sidebar({ userRole = 'OPERADOR', userName = 'Usuario', userEmail
                 { href: '/admin/users', label: 'Gestión de Usuarios', icon: '👥' },
                 { href: '/admin/roles', label: 'Roles por Oficina', icon: '🛡️', badge: userRole === 'SUPERADMIN' ? 'SUPER' : 'ADMIN' },
                 { href: '/admin/templates', label: 'Plantillas Word (.docx)', icon: '📜', badge: 'SUPER' },
+                { href: '/admin/merge-documents', label: 'Fusión de Trámites', icon: '🔗', badge: 'SUPER' },
+                { href: '/admin/routing-slip-config', label: 'Config. Hoja de Ruta', icon: '🎨', badge: 'SUPER' },
             ],
         }] : []),
         {

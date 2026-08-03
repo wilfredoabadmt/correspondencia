@@ -35,6 +35,8 @@ export function SystemHeader({
                 { href: '/admin/users', label: 'Usuarios', icon: '👥' },
                 { href: '/admin/roles', label: 'Roles', icon: '🛡️', badge: userRole === 'SUPERADMIN' ? 'SUPER' : 'ADMIN' },
                 { href: '/admin/templates', label: 'Plantillas', icon: '📜', badge: 'SUPER' },
+                { href: '/admin/merge-documents', label: 'Fusión', icon: '🔗', badge: 'SUPER' },
+                { href: '/admin/routing-slip-config', label: 'Config HR', icon: '🎨', badge: 'SUPER' },
             ]
             : []),
     ];
