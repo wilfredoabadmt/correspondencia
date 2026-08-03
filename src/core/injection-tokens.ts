@@ -49,4 +49,8 @@ export const InjectionTokens = {
     GenerateDocxTemplateUseCase: Symbol('IGenerateDocxTemplateUseCase'),
     GenerateRoutingSlipPdfUseCase: Symbol('IGenerateRoutingSlipPdfUseCase'),
     GenerateReportUseCase: Symbol('IGenerateReportUseCase'),
+    // Profile & Favorites
+    FavoriteRecipientsRepository: Symbol('IFavoriteRecipientsRepository'),
+    ChangePasswordUseCase: Symbol('IChangePasswordUseCase'),
+    ManageFavoritesUseCase: Symbol('IManageFavoritesUseCase'),
 };

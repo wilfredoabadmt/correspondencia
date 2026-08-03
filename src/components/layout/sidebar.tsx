@@ -21,6 +21,7 @@ export function Sidebar({ userRole }: SidebarProps) {
         { href: '/inbox/sent', label: 'Bandeja Enviados' },
         { href: '/inbox/archived', label: 'Bandeja Archivados' },
         { href: '/reports', label: 'Reportes Gerenciales' },
+        { href: '/profile', label: 'Mi Perfil' },
         { href: '/documents', label: 'Documentos' },
         { href: '/admin/users', label: 'Gestión de Usuarios', requiredRoles: ADMIN_ROLES },
     ];

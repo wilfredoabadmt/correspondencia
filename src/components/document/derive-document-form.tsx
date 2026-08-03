@@ -54,6 +54,7 @@ function SubmitButton() {
 export function DeriveDocumentForm({ documentId, currentAreaId, areas }: DeriveDocumentFormProps) {
     const [state, formAction] = useFormState(deriveDocument, initialState);
     const [open, setOpen] = useState(false);
+    const [selectedAreaId, setSelectedAreaId] = useState<string>('');
 
     const destinationAreas = areas.filter((area) => area.id !== currentAreaId);
 
@@ -83,7 +84,7 @@ export function DeriveDocumentForm({ documentId, currentAreaId, areas }: DeriveD
                     <div className="grid gap-4 py-4">
                         <div className="grid w-full items-center gap-1.5">
                             <Label htmlFor="toAreaId">Destino</Label>
-                            <Select name="toAreaId">
+                            <Select name="toAreaId" value={selectedAreaId} onValueChange={setSelectedAreaId}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Seleccione un área..." />
                                 </SelectTrigger>

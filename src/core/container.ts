@@ -21,6 +21,9 @@ import { GenerateReportUseCase } from '~/modules/gestion-documental/application/
 import { DocxGeneratorService } from '~/modules/gestion-documental/infra/docx-generator.service';
 import { PdfGeneratorService } from '~/modules/gestion-documental/infra/pdf-generator.service';
 import { ExceljsExporterService } from '~/modules/gestion-documental/infra/exceljs-exporter.service';
+import { ChangePasswordUseCase } from '~/modules/users/application/change-password.use-case';
+import { ManageFavoritesUseCase } from '~/modules/users/application/manage-favorites.use-case';
+import { DrizzleFavoriteRecipientsRepository } from '~/modules/users/infra/drizzle-favorite-recipients.repository';
 import { GetDocumentDetailsUseCase } from '~/modules/gestion-documental/application/get-document-details.use-case';
 import { GetDocumentHistoryUseCase } from '~/modules/gestion-documental/application/get-document-history.use-case';
 import { ListDocumentsUseCase } from '~/modules/gestion-documental/application/list-documents.use-case';
@@ -122,6 +125,15 @@ container.register(InjectionTokens.GenerateRoutingSlipPdfUseCase, {
 });
 container.register(InjectionTokens.GenerateReportUseCase, {
     useClass: GenerateReportUseCase,
+});
+container.register(InjectionTokens.FavoriteRecipientsRepository, {
+    useClass: DrizzleFavoriteRecipientsRepository,
+});
+container.register(InjectionTokens.ChangePasswordUseCase, {
+    useClass: ChangePasswordUseCase,
+});
+container.register(InjectionTokens.ManageFavoritesUseCase, {
+    useClass: ManageFavoritesUseCase,
 });
 
 // Register Area CRUD Use Cases

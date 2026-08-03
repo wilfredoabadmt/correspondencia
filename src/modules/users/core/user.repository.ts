@@ -33,5 +33,6 @@ export interface IUserRepository {
     create(data: UserInsertData): Promise<User>;
     update(id: string, organizationId: string, data: UserUpdateData): Promise<User | null>;
     delete(id: string, organizationId: string): Promise<void>;
-    countAdminsByOrganizationId(organizationId: string): Promise<number>; // Añadido para la regla de negocio del último ADMIN
+    findHashedPasswordById?(id: string, organizationId: string): Promise<string | null>;
+    countAdminsByOrganizationId(organizationId: string): Promise<number>;
 }

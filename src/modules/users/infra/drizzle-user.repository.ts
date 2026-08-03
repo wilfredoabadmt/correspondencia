@@ -95,6 +95,16 @@ export class DrizzleUserRepository implements IUserRepository {
             .where(and(eq(schema.users.id, id), eq(schema.users.organizationId, organizationId)));
     }
 
+    async findHashedPasswordById(id: string, organizationId: string): Promise<string | null> {
+        const [row] = await this.db
+            .select({ hashedPassword: schema.users.hashedPassword })
+            .from(schema.users)
+            .where(and(eq(schema.users.id, id), eq(schema.users.organizationId, organizationId)))
+            .limit(1);
+
+        return row?.hashedPassword ?? null;
+    }
+
     async countAdminsByOrganizationId(organizationId: string): Promise<number> {
         const [result] = await this.db
             .select({

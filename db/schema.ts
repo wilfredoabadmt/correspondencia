@@ -191,3 +191,27 @@ export const documentHistory = pgTable('document_history', {
         }).onDelete('restrict'),
     };
 });
+
+export const favoriteRecipients = pgTable('favorite_recipients', {
+    id: text('id').primaryKey().$defaultFn(() => createId()),
+    userId: text('user_id').notNull(),
+    targetAreaId: text('target_area_id').notNull(),
+    organizationId: text('organization_id').notNull(),
+    alias: text('alias'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        userFk: foreignKey({
+            columns: [table.userId],
+            foreignColumns: [users.id],
+        }).onDelete('cascade'),
+        targetAreaFk: foreignKey({
+            columns: [table.targetAreaId],
+            foreignColumns: [areaHierarchy.id],
+        }).onDelete('cascade'),
+        organizationFk: foreignKey({
+            columns: [table.organizationId],
+            foreignColumns: [organizations.id],
+        }).onDelete('cascade'),
+    };
+});
