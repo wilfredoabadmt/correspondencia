@@ -11,7 +11,7 @@ A continuación se presenta el desglose de tareas para la implementación de la 
 - [x] **Tarea 1.2: Generar y Aplicar Migración de Base de Datos**
     - [x] Ejecutar el comando `pnpm drizzle-kit generate:pg` para crear el nuevo archivo de migración SQL.
     - [x] Revisar el script de migración generado para verificar su correctitud.
-    - [x] Ejecutar `pnpm db:migrate` para aplicar los cambios al esquema de la base de datos de desarrollo. *(Requiere .env con DATABASE_URL)*
+    - [x] Ejecutar `pnpm db:migrate` para aplicar los cambios al esquema de la base de datos de desarrollo.
 
 - [x] **Tarea 1.3: Implementar API para CRUD de Expedientes**
     - [x] Crear la estructura de directorios para la nueva ruta de API: `src/app/api/expedientes`.
