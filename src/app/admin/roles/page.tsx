@@ -43,6 +43,8 @@ const PERMISSION_LABEL_MAP: Record<string, string> = ALL_PERMISSIONS.reduce((acc
     return acc;
 }, {} as Record<string, string>);
 
+const LOCAL_STORAGE_KEY = 'gestordoc_custom_roles';
+
 export default function RolesManagementPage() {
     const [selectedOffice, setSelectedOffice] = useState('Todas');
     const [rolesList, setRolesList] = useState<PersistentRoleItem[]>([]);
@@ -59,8 +61,23 @@ export default function RolesManagementPage() {
     const loadRoles = async () => {
         try {
             setLoading(true);
-            const data = await fetchPersistentRoles();
-            setRolesList(data);
+            const serverData = await fetchPersistentRoles();
+            let localData: PersistentRoleItem[] = [];
+            if (typeof window !== 'undefined') {
+                try {
+                    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    if (stored) localData = JSON.parse(stored);
+                } catch {
+                    localData = [];
+                }
+            }
+
+            // Merge server and local roles avoiding duplicates
+            const combinedMap = new Map<string, PersistentRoleItem>();
+            serverData.forEach(r => combinedMap.set(r.name, r));
+            localData.forEach(r => combinedMap.set(r.name, r));
+
+            setRolesList(Array.from(combinedMap.values()));
         } catch {
             setRolesList([]);
         } finally {
@@ -99,6 +116,18 @@ export default function RolesManagementPage() {
                 selectedPermissionIds
             );
 
+            // Save to localStorage as dual-persistence
+            if (typeof window !== 'undefined') {
+                try {
+                    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    const currentLocal: PersistentRoleItem[] = stored ? JSON.parse(stored) : [];
+                    const updatedLocal = [newRole, ...currentLocal.filter(r => r.name !== newRole.name)];
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
+                } catch {
+                    // Ignore storage errors
+                }
+            }
+
             setSuccessMessage(`¡Rol "${newRole.name}" creado con éxito para ${newRoleOffice}!`);
             setIsCreateModalOpen(false);
 
@@ -119,6 +148,18 @@ export default function RolesManagementPage() {
         if (!confirm(`¿Está seguro de eliminar el rol "${rName}"?`)) return;
         try {
             await deletePersistentRole(id);
+            if (typeof window !== 'undefined') {
+                try {
+                    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    if (stored) {
+                        const currentLocal: PersistentRoleItem[] = JSON.parse(stored);
+                        const updatedLocal = currentLocal.filter(r => r.id !== id && r.name !== rName);
+                        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
+                    }
+                } catch {
+                    // Ignore
+                }
+            }
             setSuccessMessage(`Rol "${rName}" eliminado.`);
             await loadRoles();
         } catch (err: any) {

@@ -13,7 +13,7 @@ export interface PersistentRoleItem {
     createdAt?: string;
 }
 
-// In-memory persistent roles store
+// Default seed roles list including SECRETARIA
 let ROLES_STORE: PersistentRoleItem[] = [
     {
         id: 'role-1',
@@ -51,6 +51,14 @@ let ROLES_STORE: PersistentRoleItem[] = [
         isSystemRole: false,
         description: 'Supervisión de informes técnicos, aprobación de notas internas y derivación prioritaria.',
         permissions: ['document.create', 'document.view.all', 'document.derive', 'document.approve', 'document.reject', 'user.view', 'area.view'],
+    },
+    {
+        id: 'role-5',
+        name: 'SECRETARIA',
+        office: 'Oficina Nacional (La Paz)',
+        isSystemRole: false,
+        description: 'Gestión de correspondencia recibida, atención a ventanilla y despacho de notas internas.',
+        permissions: ['document.create', 'document.view.all', 'document.view.own', 'document.derive'],
     },
 ];
 

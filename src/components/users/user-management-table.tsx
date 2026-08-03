@@ -10,14 +10,36 @@ type UserManagementTableProps = {
     availableRoles?: PersistentRoleItem[];
 };
 
+const LOCAL_STORAGE_KEY = 'gestordoc_custom_roles';
+
 export function UserManagementTable({ initialUsers, availableRoles = [] }: UserManagementTableProps) {
     const [users, setUsers] = React.useState<User[]>(initialUsers);
     const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
     const [name, setName] = React.useState('');
     const [email, setEmail] = React.useState('');
-    const [role, setRole] = React.useState<string>('OPERADOR');
+    const [role, setRole] = React.useState<string>('SECRETARIA');
     const [loading, setLoading] = React.useState(false);
     const [message, setMessage] = React.useState<string | null>(null);
+
+    const [allRoles, setAllRoles] = React.useState<PersistentRoleItem[]>(availableRoles);
+
+    React.useEffect(() => {
+        let localData: PersistentRoleItem[] = [];
+        if (typeof window !== 'undefined') {
+            try {
+                const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (stored) localData = JSON.parse(stored);
+            } catch {
+                localData = [];
+            }
+        }
+
+        const map = new Map<string, PersistentRoleItem>();
+        availableRoles.forEach(r => map.set(r.name, r));
+        localData.forEach(r => map.set(r.name, r));
+
+        setAllRoles(Array.from(map.values()));
+    }, [availableRoles]);
 
     // Combine system default roles with custom roles
     const roleOptions = React.useMemo(() => {
@@ -27,7 +49,7 @@ export function UserManagementTable({ initialUsers, availableRoles = [] }: UserM
             { id: 'SUPERADMIN', name: 'SUPERADMIN (Administrador de Sistema)' },
         ];
 
-        const customRoles = availableRoles
+        const customRoles = allRoles
             .filter(r => !['OPERADOR', 'ADMINISTRADOR', 'SUPERADMIN'].includes(r.name))
             .map(r => ({
                 id: r.name,
@@ -35,7 +57,7 @@ export function UserManagementTable({ initialUsers, availableRoles = [] }: UserM
             }));
 
         return [...systemRoles, ...customRoles];
-    }, [availableRoles]);
+    }, [allRoles]);
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -62,7 +84,7 @@ export function UserManagementTable({ initialUsers, availableRoles = [] }: UserM
             setIsCreateModalOpen(false);
             setName('');
             setEmail('');
-            setRole('OPERADOR');
+            setRole('SECRETARIA');
         } catch (err: any) {
             setMessage(`Error al crear usuario: ${err.message}`);
         } finally {
@@ -212,7 +234,7 @@ export function UserManagementTable({ initialUsers, availableRoles = [] }: UserM
                                 <select
                                     value={role}
                                     onChange={(e) => setRole(e.target.value)}
-                                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
+                                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold text-cyan-300 focus:border-cyan-500 outline-none"
                                 >
                                     {roleOptions.map((opt) => (
                                         <option key={opt.id} value={opt.id}>
