@@ -63,7 +63,9 @@ export default function RolesManagementPage() {
             setRolesList(data);
         } catch {
             setRolesList([]);
-        } fontinally: () => setLoading(false);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
