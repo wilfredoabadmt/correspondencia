@@ -43,6 +43,18 @@ export function DocumentDetailsCard({ document }: DocumentDetailsCardProps) {
                 <DetailItem label="Fecha del Documento" value={formatDate((document as any).documentDate || document.receptionDate)} />
                 <DetailItem label="Observaciones" value={(document as any).observations ?? 'N/A'} />
             </CardContent>
+            <div className="p-6 pt-0 flex flex-wrap gap-3">
+                <a href={`/api/documents/${document.id}/routing-slip`} target="_blank" rel="noreferrer">
+                    <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none h-9 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white">
+                        Imprimir Hoja de Ruta (PDF)
+                    </button>
+                </a>
+                <a href={`/api/documents/${document.id}/template`} download>
+                    <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none h-9 px-4 py-2 border border-slate-300 dark:border-slate-700 bg-background hover:bg-muted">
+                        Descargar Plantilla (.docx)
+                    </button>
+                </a>
+            </div>
         </Card>
     );
 }

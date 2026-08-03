@@ -18,7 +18,10 @@ export type DocumentType = (typeof DocumentType)[keyof typeof DocumentType];
  */
 export const DocumentStatus = {
     RECIBIDO: 'Recibido',
-    // Futuros estados: EN_PROCESO, DERIVADO, ARCHIVADO, RECHAZADO
+    PENDIENTE_RECEPCION: 'PENDIENTE_RECEPCION',
+    RECHAZADO: 'RECHAZADO',
+    CANCELADO: 'CANCELADO',
+    ARCHIVADO: 'ARCHIVADO',
 } as const;
 
 export type DocumentStatus = (typeof DocumentStatus)[keyof typeof DocumentStatus];

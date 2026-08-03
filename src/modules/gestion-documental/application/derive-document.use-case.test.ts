@@ -11,6 +11,13 @@ class MockDocumentRepository implements IDocumentRepository {
     findDetailsById = vi.fn();
     findMany = vi.fn();
     derive = vi.fn();
+    receiveDocument = vi.fn();
+    rejectDocument = vi.fn();
+    cancelDerivation = vi.fn();
+    justifyDelay = vi.fn();
+    groupDocuments = vi.fn();
+    archiveDocument = vi.fn();
+    unarchiveDocument = vi.fn();
 }
 
 describe('DeriveDocumentUseCase', () => {

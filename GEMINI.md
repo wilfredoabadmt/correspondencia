@@ -2,31 +2,29 @@
 
 > Este `GEMINI.md` es el **archivo de contexto persistente para Gemini CLI**. Define las reglas operativas, el stack y el flujo de trabajo para este repositorio. No es un prompt para el chat web.
 
-## 1. Feature Activa: 011-gestion-roles-permisos
+## 1. Feature Activa: 015-reportes-gerenciales-monitoreo
 
 - **Constitución**: `.specify/memory/constitution.md`
-- **Spec**: `specs/011-gestion-roles-permisos/spec.md`
+- **Spec**: `specs/015-reportes-gerenciales-monitoreo/spec.md`
 
-## Features Previas (archivadas en `specs/archive/`)
-- **010-gestion-usuarios-roles**: Implementada la gestión de usuarios y roles por organización, incluyendo creación, edición, eliminación, seguridad multi-tenant y autorización por roles.
-- **009-paginar-historial-documento**: Implementada la paginación del historial de documentos, incluyendo seguridad multi-tenant y autorización por roles.
-- **008-visualizar-historial-documento**: Implementada la visualización del historial de un documento en su página de detalle.
-- **007-derivar-documento**: Implementada la acción de derivar un documento a otra área, con registro de historial y transacciones atómicas.
-- **006-listar-filtrar-documentos**: Implementada una página para listar, buscar y filtrar todos los documentos de la organización, con paginación.
-- **005-ver-detalle-documento**: Implementada una página de detalle para cada documento, con protección contra acceso no autorizado (IDOR).
-- **004-dashboard-principal**: Implementado un Dashboard Principal que sirve como página de inicio, mostrando métricas clave y accesos directos a documentos recientes.
-- **001-registrar-documento-entrante**: Implementado el flujo para registrar un nuevo documento, incluyendo la generación de código de trámite y subida de archivos.
-- **002-gestionar-jerarquias-area**: Implementado el CRUD para que los administradores gestionen las áreas de la organización.
+## Features Previas (archivadas en `specs/`)
+- **014-control-plazos-semaforos**: Control de plazos, semáforos de mora y notificaciones de vencimiento.
+- **013-plantillas-word-hoja-ruta-pdf**: Generación de plantillas Word pre-llenadas e impresión de Hoja de Ruta Oficial PDF.
+- **012-flujo-bandejas-recepcion-rechazo**: Implementación del flujo completo de bandejas (Entrante, Pendientes, Enviados, Archivados) con acciones de custodia.
+- **011-gestion-roles-permisos**: Implementada la gestión de roles personalizados y permisos granulares por organización.
+- **010-gestion-usuarios-roles**: Implementada la gestión de usuarios y roles por organización.
+- **009-paginar-historial-documento**: Implementada la paginación del historial de documentos.
+- **008-visualizar-historial-documento**: Implementada la visualización del historial de un documento.
+- **007-derivar-documento**: Implementada la acción de derivar un documento a otra área.
+- **006-listar-filtrar-documentos**: Implementada la página para listar y buscar documentos.
+- **005-ver-detalle-documento**: Implementada la página de detalle con protección IDOR.
+- **004-dashboard-principal**: Implementado el Dashboard Principal.
+- **001-registrar-documento-entrante**: Registro de documento entrante.
+- **002-gestionar-jerarquias-area**: CRUD de jerarquías de área.
 
 ## 2. Próximas Features (Propuestas)
 
-- **Feature 011: Gestión de Roles y Permisos Granulares**: Permitir a los `ADMINISTRADOR`es definir roles personalizados y asignar permisos específicos a esos roles (ej. "ver todos los documentos", "editar documentos propios", "aprobar documentos en área X"). Esto proporcionará un control de acceso mucho más flexible y potente, construyendo sobre la base de la gestión de usuarios y roles ya implementada.
-- **007-derivar-documento**: Implementada la acción de derivar un documento a otra área, con registro de historial y transacciones atómicas.
-- **006-listar-filtrar-documentos**: Implementada una página para listar, buscar y filtrar todos los documentos de la organización, con paginación.
-- **005-ver-detalle-documento**: Implementada una página de detalle para cada documento, con protección contra acceso no autorizado (IDOR).
-- **004-dashboard-principal**: Implementado un Dashboard Principal que sirve como página de inicio, mostrando métricas clave y accesos directos a documentos recientes.
-- **001-registrar-documento-entrante**: Implementado el flujo para registrar un nuevo documento, incluyendo la generación de código de trámite y subida de archivos.
-- **002-gestionar-jerarquias-area**: Implementado el CRUD para que los administradores gestionen las áreas de la organización.
+- **Feature 016: Opciones de Perfil de Usuario y Destinatarios Frecuentes**: Perfil de usuario, avatar, destinatarios frecuentes y cambio de contraseña.
 
 
 ## 2. Stack y Arquitectura

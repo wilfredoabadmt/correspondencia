@@ -29,6 +29,9 @@ export type DeriveParams = {
     toAreaId: string;
     userId: string;
     comment: string | null;
+    derivationType?: 'OFICIAL' | 'COPIA';
+    instructionCode?: string;
+    isUrgent?: boolean;
 };
 
 export interface IDocumentRepository {
@@ -39,4 +42,18 @@ export interface IDocumentRepository {
     findMany(params: FindManyDocumentsParams): Promise<PaginatedResult<Document>>;
 
     derive(params: DeriveParams): Promise<void>;
+
+    receiveDocument(params: { documentId: string; userId: string; organizationId: string }): Promise<void>;
+
+    rejectDocument(params: { documentId: string; userId: string; reason: string; organizationId: string }): Promise<void>;
+
+    cancelDerivation(params: { documentId: string; userId: string; organizationId: string }): Promise<void>;
+
+    justifyDelay(params: { documentId: string; userId: string; reason: string; organizationId: string }): Promise<void>;
+
+    groupDocuments(params: { mainDocumentId: string; secondaryDocumentIds: string[]; organizationId: string }): Promise<void>;
+
+    archiveDocument(params: { documentId: string; folderCategory: string; observations: string | null; organizationId: string }): Promise<void>;
+
+    unarchiveDocument(params: { documentId: string; organizationId: string }): Promise<void>;
 }

@@ -15,7 +15,11 @@ export function Sidebar({ userRole }: SidebarProps) {
     const pathname = usePathname();
 
     const navItems = [
-        { href: '/', label: 'Dashboard' },
+        { href: '/dashboard', label: 'Inicio / Dashboard' },
+        { href: '/inbox/incoming', label: 'Bandeja Entrante' },
+        { href: '/inbox/pending', label: 'Bandeja Pendientes' },
+        { href: '/inbox/sent', label: 'Bandeja Enviados' },
+        { href: '/inbox/archived', label: 'Bandeja Archivados' },
         { href: '/documents', label: 'Documentos' },
         { href: '/admin/users', label: 'Gestión de Usuarios', requiredRoles: ADMIN_ROLES },
     ];
