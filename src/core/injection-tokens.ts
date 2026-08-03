@@ -49,6 +49,14 @@ export const InjectionTokens = {
     GenerateDocxTemplateUseCase: Symbol('IGenerateDocxTemplateUseCase'),
     GenerateRoutingSlipPdfUseCase: Symbol('IGenerateRoutingSlipPdfUseCase'),
     GenerateReportUseCase: Symbol('IGenerateReportUseCase'),
+    // Expedientes
+    ExpedienteRepository: Symbol('IExpedienteRepository'),
+    CreateExpedienteUseCase: Symbol('ICreateExpedienteUseCase'),
+    ListExpedientesUseCase: Symbol('IListExpedientesUseCase'),
+    GetExpedienteDetailsUseCase: Symbol('IGetExpedienteDetailsUseCase'),
+    UpdateExpedienteUseCase: Symbol('IUpdateExpedienteUseCase'),
+    AssociateDocumentToExpedienteUseCase: Symbol('IAssociateDocumentUseCase'),
+    DisassociateDocumentFromExpedienteUseCase: Symbol('IDisassociateDocumentUseCase'),
     // Profile & Favorites
     FavoriteRecipientsRepository: Symbol('IFavoriteRecipientsRepository'),
     ChangePasswordUseCase: Symbol('IChangePasswordUseCase'),

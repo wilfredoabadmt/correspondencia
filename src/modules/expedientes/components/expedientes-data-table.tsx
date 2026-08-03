@@ -2,12 +2,6 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import {
-    flexRender,
-    getCoreRowModel,
-    useReactTable,
-    type ColumnDef,
-} from '@tanstack/react-table';
 
 import {
     Table,
@@ -18,98 +12,54 @@ import {
     TableRow,
 } from '~/components/ui/table';
 
-// TODO: Definir el tipo de dato para un expediente cuando la API esté lista.
-// Por ahora, usamos un tipo genérico.
 export type Expediente = {
     id: string;
     code: string;
     subject: string;
     status: string;
     createdAt: string;
+    documentCount?: number;
 };
 
-export const columns: ColumnDef<Expediente>[] = [
-    {
-        accessorKey: 'code',
-        header: 'Código',
-        cell: ({ row }) => {
-            const expediente = row.original;
-            return (
-                <Link href={`/dashboard/expedientes/${expediente.id}`} className="text-blue-600 hover:underline">
-                    {expediente.code}
-                </Link>
-            );
-        },
-    },
-    {
-        accessorKey: 'subject',
-        header: 'Asunto',
-    },
-    {
-        accessorKey: 'status',
-        header: 'Estado',
-    },
-    {
-        accessorKey: 'createdAt',
-        header: 'Fecha de Creación',
-        cell: ({ row }) => new Date(row.getValue('createdAt')).toLocaleDateString(),
-    },
-];
-
 interface ExpedientesDataTableProps {
-    // TODO: Usar el tipo de dato correcto cuando esté disponible
     data: Expediente[];
 }
 
 export function ExpedientesDataTable({ data }: ExpedientesDataTableProps) {
-    const table = useReactTable({
-        data,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-    });
+    if (data.length === 0) {
+        return (
+            <div className="rounded-md border flex items-center justify-center h-24">
+                <p className="text-gray-500">No se encontraron expedientes.</p>
+            </div>
+        );
+    }
 
     return (
         <div className="rounded-md border">
             <Table>
                 <TableHeader>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id}>
-                            {headerGroup.headers.map((header) => {
-                                return (
-                                    <TableHead key={header.id}>
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                  header.column.columnDef.header,
-                                                  header.getContext()
-                                              )}
-                                    </TableHead>
-                                );
-                            })}
-                        </TableRow>
-                    ))}
+                    <TableRow>
+                        <TableHead>Código</TableHead>
+                        <TableHead>Asunto</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead>Documentos</TableHead>
+                        <TableHead>Fecha de Creación</TableHead>
+                    </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map((row) => (
-                            <TableRow
-                                key={row.id}
-                                data-state={row.getIsSelected() && 'selected'}
-                            >
-                                {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id}>
-                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                    </TableCell>
-                                ))}
-                            </TableRow>
-                        ))
-                    ) : (
-                        <TableRow>
-                            <TableCell colSpan={columns.length} className="h-24 text-center">
-                                No se encontraron expedientes.
+                    {data.map((exp) => (
+                        <TableRow key={exp.id}>
+                            <TableCell className="font-medium">
+                                <Link href={`/dashboard/expedientes/${exp.id}`} className="text-blue-600 hover:underline">
+                                    {exp.code}
+                                </Link>
                             </TableCell>
+                            <TableCell>{exp.subject}</TableCell>
+                            <TableCell>{exp.status}</TableCell>
+                            <TableCell>{exp.documentCount ?? 0}</TableCell>
+                            <TableCell>{new Date(exp.createdAt).toLocaleDateString()}</TableCell>
                         </TableRow>
-                    )}
+                    ))}
                 </TableBody>
             </Table>
         </div>

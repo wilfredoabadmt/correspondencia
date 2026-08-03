@@ -53,6 +53,7 @@ describe('GetDocumentDetailsUseCase', () => {
         archiveObservations: null,
         fileKey: 'uploads/test-file.pdf',
         downloadUrl: null,
+        expedienteId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };

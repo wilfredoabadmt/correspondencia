@@ -33,6 +33,13 @@ import { UpdateAreaUseCase } from '~/modules/gestion-documental/application/upda
 import { DrizzleAreaHierarchyRepository } from '~/modules/gestion-documental/infra/drizzle-area-hierarchy.repository';
 import { DrizzleDocumentHistoryRepository } from '~/modules/gestion-documental/infra/drizzle-document-history.repository';
 import { DrizzleDocumentRepository } from '~/modules/gestion-documental/infra/drizzle-document.repository';
+import { DrizzleExpedienteRepository } from '~/modules/gestion-documental/infra/drizzle-expediente.repository';
+import { CreateExpedienteUseCase } from '~/modules/gestion-documental/application/create-expediente.use-case.impl';
+import { ListExpedientesUseCase } from '~/modules/gestion-documental/application/list-expedientes.use-case.impl';
+import { GetExpedienteDetailsUseCase } from '~/modules/gestion-documental/application/get-expediente-details.use-case.impl';
+import { UpdateExpedienteUseCase } from '~/modules/gestion-documental/application/update-expediente.use-case.impl';
+import { AssociateDocumentUseCase } from '~/modules/gestion-documental/application/associate-document.use-case.impl';
+import { DisassociateDocumentUseCase } from '~/modules/gestion-documental/application/disassociate-document.use-case.impl';
 
 import { DrizzleUserRepository } from '~/modules/users/infra/drizzle-user.repository';
 import { CreateUserUseCase } from '~/modules/users/application/create-user.use-case';
@@ -108,6 +115,30 @@ container.register(InjectionTokens.ArchiveDocumentUseCase, {
 container.register(InjectionTokens.UnarchiveDocumentUseCase, {
     useClass: UnarchiveDocumentUseCase,
 });
+
+// Register Expediente Dependencies
+container.register(InjectionTokens.ExpedienteRepository, {
+    useClass: DrizzleExpedienteRepository,
+});
+container.register(InjectionTokens.CreateExpedienteUseCase, {
+    useClass: CreateExpedienteUseCase,
+});
+container.register(InjectionTokens.ListExpedientesUseCase, {
+    useClass: ListExpedientesUseCase,
+});
+container.register(InjectionTokens.GetExpedienteDetailsUseCase, {
+    useClass: GetExpedienteDetailsUseCase,
+});
+container.register(InjectionTokens.UpdateExpedienteUseCase, {
+    useClass: UpdateExpedienteUseCase,
+});
+container.register(InjectionTokens.AssociateDocumentToExpedienteUseCase, {
+    useClass: AssociateDocumentUseCase,
+});
+container.register(InjectionTokens.DisassociateDocumentFromExpedienteUseCase, {
+    useClass: DisassociateDocumentUseCase,
+});
+
 container.register(InjectionTokens.DocxGeneratorService, {
     useClass: DocxGeneratorService,
 });

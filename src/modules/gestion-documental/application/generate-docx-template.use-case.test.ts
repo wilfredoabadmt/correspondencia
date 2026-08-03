@@ -52,6 +52,7 @@ describe('GenerateDocxTemplateUseCase', () => {
         archiveObservations: null,
         fileKey: null,
         downloadUrl: null,
+        expedienteId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };
