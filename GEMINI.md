@@ -2,12 +2,13 @@
 
 > Este `GEMINI.md` es el **archivo de contexto persistente para Gemini CLI**. Define las reglas operativas, el stack y el flujo de trabajo para este repositorio. No es un prompt para el chat web.
 
-## 1. Feature Activa: 013-plantillas-word-hoja-ruta-pdf
+## 1. Feature Activa: 014-control-plazos-semaforos
 
 - **Constitución**: `.specify/memory/constitution.md`
-- **Spec**: `specs/013-plantillas-word-hoja-ruta-pdf/spec.md`
+- **Spec**: `specs/014-control-plazos-semaforos/spec.md`
 
 ## Features Previas (archivadas en `specs/`)
+- **013-plantillas-word-hoja-ruta-pdf**: Generación de plantillas Word pre-llenadas e impresión de Hoja de Ruta Oficial PDF.
 - **012-flujo-bandejas-recepcion-rechazo**: Implementación del flujo completo de bandejas (Entrante, Pendientes, Enviados, Archivados) con acciones de custodia.
 - **011-gestion-roles-permisos**: Implementada la gestión de roles personalizados y permisos granulares por organización.
 - **010-gestion-usuarios-roles**: Implementada la gestión de usuarios y roles por organización.
@@ -22,8 +23,8 @@
 
 ## 2. Próximas Features (Propuestas)
 
-- **Feature 014: Control de Plazos, Semáforos y Alertas**: Control de días transcurridos, alertas visuales > 5 días y notificaciones.
 - **Feature 015: Reportes Gerenciales y Monitoreo**: Módulo de consulta gerencial y exportaciones Excel/PDF.
+- **Feature 016: Opciones de Usuario y Destinatarios Frecuentes**: Perfil de usuario, avatar, destinatarios frecuentes y cambio de contraseña.
 
 
 ## 2. Stack y Arquitectura
