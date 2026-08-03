@@ -34,6 +34,7 @@ export function SystemHeader({
             ? [
                 { href: '/admin/users', label: 'Usuarios', icon: '👥' },
                 { href: '/admin/roles', label: 'Roles', icon: '🛡️', badge: userRole === 'SUPERADMIN' ? 'SUPER' : 'ADMIN' },
+                { href: '/admin/templates', label: 'Plantillas', icon: '📜', badge: 'SUPER' },
             ]
             : []),
     ];

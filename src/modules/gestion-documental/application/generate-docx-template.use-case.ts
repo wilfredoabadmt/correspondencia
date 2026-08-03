@@ -25,6 +25,10 @@ export class GenerateDocxTemplateUseCase {
             doc = null;
         }
 
+        if (!doc && !documentId.includes('sample') && !documentId.includes('tpl')) {
+            throw new Error('Documento no encontrado o no tiene autorización para acceder.');
+        }
+
         const citeCode = doc?.trackingCode || doc?.trackingId || (documentId.includes('sample') ? 'AEV_DNP_INF_Nro.0028-2026' : `DOC-${documentId.substring(0, 8)}`);
         const dateStr = doc?.createdAt 
             ? new Date(doc.createdAt).toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })

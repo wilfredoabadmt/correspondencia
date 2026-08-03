@@ -45,6 +45,7 @@ export function Sidebar({ userRole = 'OPERADOR', userName = 'Usuario', userEmail
             items: [
                 { href: '/admin/users', label: 'Gestión de Usuarios', icon: '👥' },
                 { href: '/admin/roles', label: 'Roles por Oficina', icon: '🛡️', badge: userRole === 'SUPERADMIN' ? 'SUPER' : 'ADMIN' },
+                { href: '/admin/templates', label: 'Plantillas Word (.docx)', icon: '📜', badge: 'SUPER' },
             ],
         }] : []),
         {
