@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
-export async function GET(request: Request) {
-    const url = new URL('/', request.url);
-    const response = NextResponse.redirect(url);
+export async function GET(request: NextRequest) {
+    const redirectUrl = new URL('/', request.url);
+    const response = NextResponse.redirect(redirectUrl);
 
     // Delete session cookies
     response.cookies.delete('session_token');
@@ -14,8 +14,9 @@ export async function GET(request: Request) {
     return response;
 }
 
-export async function POST(request: Request) {
-    const response = NextResponse.json({ success: true }, { status: 200 });
+export async function POST(request: NextRequest) {
+    const redirectUrl = new URL('/', request.url);
+    const response = NextResponse.redirect(redirectUrl);
 
     // Delete session cookies
     response.cookies.delete('session_token');
