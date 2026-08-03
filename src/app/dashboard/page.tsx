@@ -5,6 +5,7 @@ import { container, InjectionTokens } from '~/core/container';
 import { GetDashboardDataUseCase } from '~/modules/dashboard/application/get-dashboard-data.use-case';
 import { auth } from '~/modules/auth/lib/auth';
 import { OverdueNotificationModal } from '~/components/dashboard/overdue-notification-modal';
+import { SystemShell } from '~/components/layout/SystemShell';
 import type { IDocumentRepository } from '~/modules/gestion-documental/core/document.repository';
 
 export const dynamic = 'force-dynamic';
@@ -42,12 +43,17 @@ export default async function DashboardPage() {
     const isSuperAdminOrAdmin = user.role === 'SUPERADMIN' || user.role === 'ADMINISTRADOR';
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 bg-futuristic-grid py-8 px-4 sm:px-6 lg:px-8">
+        <SystemShell
+            userRole={user.role}
+            userName={user.name}
+            userEmail={user.email}
+            organizationId={organizationId}
+        >
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Modal for Overdue Notifications */}
                 <OverdueNotificationModal overdueDocuments={overdueDocs} />
 
-                {/* Dashboard Top Header Bar */}
+                {/* Dashboard Header */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
                     <div>
                         <div className="flex items-center gap-3">
@@ -67,36 +73,28 @@ export default async function DashboardPage() {
                         </p>
                     </div>
 
-                    {/* Navigation Actions */}
+                    {/* Navigation Quick Actions */}
                     <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                         {isSuperAdminOrAdmin && (
                             <Link
                                 href="/admin/roles"
                                 className="px-4 py-2.5 rounded-xl font-bold text-xs text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all flex items-center gap-1.5"
                             >
-                                <span>🛡️ Gestionar Roles de Oficina</span>
+                                <span>🛡️ Roles por Oficina</span>
                             </Link>
                         )}
 
                         <Link
-                            href="/"
-                            className="px-4 py-2.5 rounded-xl font-medium text-xs text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all flex items-center gap-1.5"
+                            href="/inbox/pending"
+                            className="px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition-all flex items-center gap-1.5"
                         >
-                            <span>🌐 Ver Landing Page</span>
+                            <span>⏳ Atender Pendientes</span>
                         </Link>
-
-                        <a
-                            href="/api/auth/logout"
-                            className="px-4 py-2.5 rounded-xl font-semibold text-xs text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-all flex items-center gap-1.5"
-                        >
-                            <span>🚪 Cerrar Sesión</span>
-                        </a>
                     </div>
                 </div>
 
-                {/* KPI Metrics Cards (Glassmorphism & High Contrast) */}
+                {/* KPI Metrics Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Card 1 */}
                     <div className="glass-panel p-6 rounded-3xl border border-slate-800 hover:border-cyan-500/30 transition-all">
                         <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Documentos Hoy</div>
                         <div className="text-4xl font-extrabold text-white font-mono mt-3 text-gradient-cyan">
@@ -105,7 +103,6 @@ export default async function DashboardPage() {
                         <div className="text-[11px] text-slate-400 mt-2">Registrados en la jornada</div>
                     </div>
 
-                    {/* Card 2 */}
                     <div className="glass-panel p-6 rounded-3xl border border-slate-800 hover:border-blue-500/30 transition-all">
                         <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Documentos Pendientes</div>
                         <div className="text-4xl font-extrabold text-cyan-300 font-mono mt-3">
@@ -114,7 +111,6 @@ export default async function DashboardPage() {
                         <div className="text-[11px] text-slate-400 mt-2">En espera de respuesta / derivación</div>
                     </div>
 
-                    {/* Card 3 */}
                     <div className="glass-panel p-6 rounded-3xl border border-slate-800 hover:border-indigo-500/30 transition-all">
                         <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Total Documentos</div>
                         <div className="text-4xl font-extrabold text-indigo-300 font-mono mt-3">
@@ -123,7 +119,6 @@ export default async function DashboardPage() {
                         <div className="text-[11px] text-slate-400 mt-2">Procesados en la organización</div>
                     </div>
 
-                    {/* Card 4: Overdue Alert */}
                     <div className="glass-panel p-6 rounded-3xl border border-rose-500/30 bg-rose-950/20 shadow-lg shadow-rose-950/30">
                         <div className="text-xs font-semibold text-rose-300 uppercase tracking-wider">Trámites en Mora (&gt; 5 días)</div>
                         <div className="text-4xl font-extrabold text-rose-400 font-mono mt-3">
@@ -187,6 +182,6 @@ export default async function DashboardPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </SystemShell>
     );
 }

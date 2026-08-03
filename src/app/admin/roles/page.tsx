@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { SystemShell } from '~/components/layout/SystemShell';
 
 interface PermissionOption {
     id: string;
@@ -131,7 +132,7 @@ export default function RolesManagementPage() {
         : rolesList.filter(r => r.office === selectedOffice);
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 bg-futuristic-grid py-8 px-4 sm:px-6 lg:px-8">
+        <SystemShell userRole="SUPERADMIN" userName="Super Usuario de Sistema">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header Navbar */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
@@ -149,7 +150,7 @@ export default function RolesManagementPage() {
                                 </span>
                             </div>
                             <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                                Defina y personalice roles con permisos estritos para distintas dependencias y personal institucional.
+                                Defina y personalice roles con permisos estrictos para distintas dependencias y personal institucional.
                             </p>
                         </div>
                     </div>
@@ -356,6 +357,6 @@ export default function RolesManagementPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </SystemShell>
     );
 }
