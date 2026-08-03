@@ -20,6 +20,7 @@ export function Sidebar({ userRole }: SidebarProps) {
         { href: '/inbox/pending', label: 'Bandeja Pendientes' },
         { href: '/inbox/sent', label: 'Bandeja Enviados' },
         { href: '/inbox/archived', label: 'Bandeja Archivados' },
+        { href: '/reports', label: 'Reportes Gerenciales' },
         { href: '/documents', label: 'Documentos' },
         { href: '/admin/users', label: 'Gestión de Usuarios', requiredRoles: ADMIN_ROLES },
     ];

@@ -45,6 +45,8 @@ export const InjectionTokens = {
     // Document & PDF Generators
     DocxGeneratorService: Symbol('IDocxGeneratorService'),
     PdfGeneratorService: Symbol('IPdfGeneratorService'),
+    ExcelExporterService: Symbol('IExcelExporterService'),
     GenerateDocxTemplateUseCase: Symbol('IGenerateDocxTemplateUseCase'),
     GenerateRoutingSlipPdfUseCase: Symbol('IGenerateRoutingSlipPdfUseCase'),
+    GenerateReportUseCase: Symbol('IGenerateReportUseCase'),
 };
