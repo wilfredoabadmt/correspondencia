@@ -23,36 +23,35 @@ export function LandingHeader() {
                                 SIGEC v2.4
                             </span>
                         </div>
-                        <span className="text-xs text-slate-400 font-medium">Plataforma de Gestión de Correspondencia</span>
+                        <span className="text-xs text-slate-300 font-medium">Plataforma de Gestión de Correspondencia</span>
                     </div>
                 </Link>
 
                 {/* Nav items */}
-                <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+                <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-200">
                     <a href="#funcionalidades" className="hover:text-cyan-400 transition-colors">
                         Funcionalidades
                     </a>
-                    <a href="#bandejas" className="hover:text-cyan-400 transition-colors">
-                        Bandejas & Flujos
-                    </a>
                     <a href="#roles" className="hover:text-cyan-400 transition-colors">
-                        Roles & Permisos
+                        Roles por Oficina
                     </a>
-                    <a href="#trazabilidad" className="hover:text-cyan-400 transition-colors">
-                        Seguimiento QR
-                    </a>
+                    <Link href="/admin/roles" className="hover:text-amber-300 transition-colors flex items-center gap-1">
+                        <span>👑 Super Usuario</span>
+                    </Link>
                 </nav>
 
                 {/* Actions & Status */}
-                <div className="flex items-center gap-4">
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span>Servidor Operativo</span>
-                    </div>
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/login?role=SUPERADMIN"
+                        className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all"
+                    >
+                        <span>👑 Super Admin</span>
+                    </Link>
 
                     <Link
                         href="/login"
-                        className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0"
+                        className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all duration-300 transform hover:-translate-y-0.5"
                     >
                         <span>Iniciar Sesión</span>
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

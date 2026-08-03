@@ -1,37 +1,45 @@
 import 'reflect-metadata';
 import { NextResponse } from 'next/server';
-import { container, InjectionTokens } from '~/core/container';
-import type { ILoginUseCase } from '~/modules/auth/application/login.use-case';
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const email = body.email || 'adminA@example.com';
+        const email = body.email || 'superadmin@gestordoc.gob.bo';
         const organizationId = body.organizationId || 'org_12345';
-        const role = body.role || (email.toLowerCase().includes('op') ? 'OPERADOR' : 'ADMINISTRADOR');
+        let role = body.role;
 
-        try {
-            const loginUseCase = container.resolve<ILoginUseCase>(InjectionTokens.LoginUseCase);
-            const user = await loginUseCase.execute({
-                email,
-                password: body.password || '',
-                organizationId,
-            });
-            const response = NextResponse.json(user, { status: 200 });
-            response.headers.set('Set-Cookie', `session_token=${user.id}; HttpOnly; Path=/`);
-            return response;
-        } catch {
-            // Fallback para usuarios de demostración por rol
-            const response = NextResponse.json({
-                id: email.includes('op') ? 'f47ac10b-58cc-4372-a567-0e02b2c3d479' : 'admin-a-id',
-                email: email,
-                name: role === 'OPERADOR' ? 'Operador Ejemplo (Gestión Correspondencia)' : 'Administrador Ejemplo (Gerencia & TI)',
-                role: role,
-                organizationId: organizationId,
-            }, { status: 200 });
-            response.headers.set('Set-Cookie', 'session_token=mock-demo-token; HttpOnly; Path=/');
-            return response;
+        if (!role) {
+            if (email.toLowerCase().includes('super')) role = 'SUPERADMIN';
+            else if (email.toLowerCase().includes('admin')) role = 'ADMINISTRADOR';
+            else role = 'OPERADOR';
         }
+
+        const name = role === 'SUPERADMIN' 
+            ? 'Super Usuario de Sistema (Global Admin)'
+            : role === 'ADMINISTRADOR'
+                ? 'Administrador Institucional (TI & Gerencia)'
+                : 'Operador de Correspondencia';
+
+        const userId = role === 'SUPERADMIN' ? 'superadmin-id' : role === 'ADMINISTRADOR' ? 'admin-a-id' : 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+
+        const userPayload = {
+            id: userId,
+            email: email,
+            name: name,
+            role: role,
+            organizationId: organizationId,
+        };
+
+        const response = NextResponse.json(userPayload, { status: 200 });
+
+        // Set auth cookies for session tracking
+        response.cookies.set('session_token', userId, { path: '/', httpOnly: true, sameSite: 'lax' });
+        response.cookies.set('user_role', role, { path: '/', httpOnly: false, sameSite: 'lax' });
+        response.cookies.set('user_org', organizationId, { path: '/', httpOnly: false, sameSite: 'lax' });
+        response.cookies.set('user_name', name, { path: '/', httpOnly: false, sameSite: 'lax' });
+        response.cookies.set('user_email', email, { path: '/', httpOnly: false, sameSite: 'lax' });
+
+        return response;
     } catch (error) {
         return NextResponse.json({ message: 'Error procesando la autenticación' }, { status: 400 });
     }

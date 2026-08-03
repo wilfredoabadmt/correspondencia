@@ -1,3 +1,5 @@
+import { cookies } from 'next/headers';
+
 export type UserSession = {
     user?: {
         id: string;
@@ -9,12 +11,29 @@ export type UserSession = {
 };
 
 export async function auth(): Promise<UserSession | null> {
-    return {
-        user: {
-            id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-            organizationId: 'org_12345',
-            role: 'OPERADOR',
-            name: 'Operador Ejemplo',
-        },
-    };
+    try {
+        const cookieStore = cookies();
+        const sessionToken = cookieStore.get('session_token')?.value;
+
+        if (!sessionToken) {
+            return null;
+        }
+
+        const userRole = cookieStore.get('user_role')?.value || 'OPERADOR';
+        const userOrg = cookieStore.get('user_org')?.value || 'org_12345';
+        const userName = cookieStore.get('user_name')?.value || 'Usuario Autenticado';
+        const userEmail = cookieStore.get('user_email')?.value || 'usuario@aevivienda.gob.bo';
+
+        return {
+            user: {
+                id: sessionToken,
+                organizationId: userOrg,
+                role: userRole,
+                name: userName,
+                email: userEmail,
+            },
+        };
+    } catch {
+        return null;
+    }
 }
