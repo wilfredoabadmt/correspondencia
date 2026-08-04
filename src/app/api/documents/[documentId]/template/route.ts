@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NextRequest, NextResponse } from 'next/server';
 import { container, InjectionTokens } from '~/core/container';
 import { auth } from '~/modules/auth/lib/auth';
+import { serveTemplateFile } from '~/app/admin/templates/_actions';
 import type { GenerateDocxTemplateUseCase } from '~/modules/gestion-documental/application/generate-docx-template.use-case';
 
 export async function GET(
@@ -14,6 +15,19 @@ export async function GET(
     }
 
     try {
+        // First, try to serve a stored template file from the admin template store
+        const stored = await serveTemplateFile(params.documentId, session.user.organizationId);
+        if (stored) {
+            return new NextResponse(new Uint8Array(stored.buffer), {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'Content-Disposition': `attachment; filename="${stored.fileName}"`,
+                },
+            });
+        }
+
+        // Fallback to the generated template use case
         const useCase = container.resolve<GenerateDocxTemplateUseCase>(
             InjectionTokens.GenerateDocxTemplateUseCase
         );

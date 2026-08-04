@@ -12,9 +12,11 @@ export interface DocumentTemplateModel {
     version: string;
     isActive: boolean;
     createdAt: string;
+    /** Actual .docx file bytes stored in-memory */
+    fileBuffer?: number[];
 }
 
-// In-memory persistent state store for template models (backed by DB schema or fallback)
+// In-memory persistent state store for template models
 let TEMPLATE_STORE: DocumentTemplateModel[] = [
     {
         id: 'tpl-inf-01',
@@ -92,7 +94,12 @@ async function checkAdminAuth() {
 
 export async function listDocumentTemplates(): Promise<DocumentTemplateModel[]> {
     await checkAdminAuth();
-    return TEMPLATE_STORE;
+    return TEMPLATE_STORE.map(({ fileBuffer, ...rest }) => rest);
+}
+
+async function fileToBuffer(file: File): Promise<number[]> {
+    const arrayBuffer = await file.arrayBuffer();
+    return Array.from(new Uint8Array(arrayBuffer));
 }
 
 export async function uploadDocumentTemplate(formData: FormData): Promise<DocumentTemplateModel> {
@@ -105,6 +112,7 @@ export async function uploadDocumentTemplate(formData: FormData): Promise<Docume
 
     const fileName = file ? file.name : `Plantilla_${documentType}_${Date.now()}.docx`;
     const fileSizeInKB = file ? (file.size / 1024).toFixed(1) + ' KB' : '45.0 KB';
+    const fileBuffer = file ? await fileToBuffer(file) : undefined;
 
     // Set other templates of same type to inactive
     TEMPLATE_STORE.forEach(t => {
@@ -122,10 +130,11 @@ export async function uploadDocumentTemplate(formData: FormData): Promise<Docume
         version,
         isActive: true,
         createdAt: new Date().toISOString(),
+        fileBuffer,
     };
 
     TEMPLATE_STORE.unshift(newTemplate);
-    return newTemplate;
+    return { ...newTemplate, fileBuffer: undefined };
 }
 
 export async function setActiveTemplate(id: string): Promise<void> {
@@ -162,7 +171,7 @@ export async function updateDocumentTemplate(
     if (data.version) template.version = data.version;
     if (data.documentType) template.documentType = data.documentType;
 
-    return template;
+    return { ...template, fileBuffer: undefined };
 }
 
 export async function replaceTemplateFile(
@@ -180,6 +189,25 @@ export async function replaceTemplateFile(
     template.fileSize = (file.size / 1024).toFixed(1) + ' KB';
     template.version = formData.get('version') as string || template.version;
     template.createdAt = new Date().toISOString();
+    template.fileBuffer = await fileToBuffer(file);
 
-    return template;
+    return { ...template, fileBuffer: undefined };
+}
+
+/**
+ * Returns the stored .docx file bytes for a template.
+ * Used by the download endpoint to serve the actual file.
+ */
+export async function serveTemplateFile(
+    id: string,
+    organizationId: string
+): Promise<{ buffer: number[]; fileName: string } | null> {
+    // No auth check here — called from API route that already validates session
+    const template = TEMPLATE_STORE.find(t => t.id === id);
+    if (!template || !template.fileBuffer) return null;
+
+    return {
+        buffer: template.fileBuffer,
+        fileName: template.fileName,
+    };
 }
