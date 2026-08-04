@@ -149,3 +149,18 @@ export async function deleteDocumentTemplate(id: string): Promise<void> {
         TEMPLATE_STORE.splice(idx, 1);
     }
 }
+
+export async function updateDocumentTemplate(
+    id: string,
+    data: { title?: string; version?: string; documentType?: DocumentTemplateModel['documentType'] }
+): Promise<DocumentTemplateModel | null> {
+    await checkAdminAuth();
+    const template = TEMPLATE_STORE.find(t => t.id === id);
+    if (!template) return null;
+
+    if (data.title) template.title = data.title;
+    if (data.version) template.version = data.version;
+    if (data.documentType) template.documentType = data.documentType;
+
+    return template;
+}

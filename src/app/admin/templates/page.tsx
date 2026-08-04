@@ -34,6 +34,20 @@ export default function TemplatesManagementPage() {
     const [message, setMessage] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
+    // Edit modal state
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingTemplate, setEditingTemplate] = useState<DocumentTemplateModel | null>(null);
+    const [editTitle, setEditTitle] = useState('');
+    const [editVersion, setEditVersion] = useState('');
+    const [editType, setEditType] = useState<'INF' | 'NOT' | 'CAR' | 'MEM' | 'CIR' | 'INS'>('INF');
+
+    // Edit modal state
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingTemplate, setEditingTemplate] = useState<DocumentTemplateModel | null>(null);
+    const [editTitle, setEditTitle] = useState('');
+    const [editVersion, setEditVersion] = useState('');
+    const [editType, setEditType] = useState<'INF' | 'NOT' | 'CAR' | 'MEM' | 'CIR' | 'INS'>('INF');
+
     const loadTemplates = async () => {
         try {
             setLoading(true);
@@ -238,6 +252,14 @@ export default function TemplatesManagementPage() {
                                             )}
 
                                             <button
+                                                onClick={() => openEditModal(template)}
+                                                className="p-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-bold transition-colors"
+                                                title="Editar plantilla"
+                                            >
+                                                ✏️
+                                            </button>
+
+                                            <button
                                                 onClick={() => handleDelete(template.id, template.title)}
                                                 className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition-colors"
                                                 title="Eliminar plantilla"
@@ -249,6 +271,74 @@ export default function TemplatesManagementPage() {
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {/* Edit Modal */}
+                {isEditModalOpen && editingTemplate && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+                        <div className="w-full max-w-lg glass-panel-glow rounded-3xl p-6 sm:p-8 space-y-5 border border-blue-500/40 shadow-2xl animate-fadeIn">
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                                <h3 className="text-lg font-bold text-white">Editar Plantilla</h3>
+                                <button onClick={() => { setIsEditModalOpen(false); setEditingTemplate(null); }} className="text-slate-400 hover:text-white font-bold">✕</button>
+                            </div>
+
+                            <form onSubmit={handleUpdateTemplate} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-300 mb-1">Tipo de Documento</label>
+                                    <select
+                                        value={editType}
+                                        onChange={(e) => setEditType(e.target.value as any)}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:border-blue-500 outline-none"
+                                    >
+                                        <option value="INF">📄 Informe Técnico (INF)</option>
+                                        <option value="NOT">📝 Nota Interna (NOT)</option>
+                                        <option value="CAR">✉️ Carta Oficial (CAR)</option>
+                                        <option value="MEM">📋 Memorándum (MEM)</option>
+                                        <option value="CIR">📢 Circular Informativa (CIR)</option>
+                                        <option value="INS">📌 Instructivo (INS)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-300 mb-1">Título de la Plantilla</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editTitle}
+                                        onChange={(e) => setEditTitle(e.target.value)}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:border-blue-500 outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-300 mb-1">Versión</label>
+                                    <input
+                                        type="text"
+                                        value={editVersion}
+                                        onChange={(e) => setEditVersion(e.target.value)}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:border-blue-500 outline-none"
+                                    />
+                                </div>
+
+                                <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setIsEditModalOpen(false); setEditingTemplate(null); }}
+                                        className="px-4 py-2.5 rounded-xl font-semibold text-xs text-slate-400 hover:text-white bg-slate-900"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={submitting}
+                                        className="px-6 py-2.5 rounded-xl font-bold text-xs text-white uppercase tracking-wider bg-blue-600 hover:bg-blue-500"
+                                    >
+                                        {submitting ? 'Guardando...' : 'Guardar Cambios'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 )}
 
