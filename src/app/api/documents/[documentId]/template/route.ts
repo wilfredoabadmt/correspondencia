@@ -24,7 +24,7 @@ export async function GET(
         const stored = await serveTemplateFile(params.documentId, organizationId);
         if (stored) {
             const cleanFileName = stored.fileName.endsWith('.docx') ? stored.fileName : `${stored.fileName}.docx`;
-            return new NextResponse(Buffer.from(stored.buffer), {
+            return new NextResponse(new Uint8Array(stored.buffer), {
                 status: 200,
                 headers: {
                     'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
