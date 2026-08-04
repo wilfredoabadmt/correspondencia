@@ -52,15 +52,8 @@ export class R2StorageService implements IStorageService {
         const stream = response.Body;
         if (!stream) throw new Error('Empty response from R2');
 
-        // Convert readable stream to Buffer
-        const chunks: Uint8Array[] = [];
-        const reader = stream.transformToWebStream().getReader();
-        let done = false;
-        while (!done) {
-            const result = await reader.read();
-            done = result.done;
-            if (result.value) chunks.push(result.value);
-        }
-        return Buffer.concat(chunks);
+        // Use AWS SDK's transformToByteArray for compatibility
+        const byteArray = await stream.transformToByteArray();
+        return Buffer.from(byteArray);
     }
 }
