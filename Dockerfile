@@ -47,7 +47,10 @@ COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 
 # Copy pdfkit font data files (.afm) required for Helvetica PDF generation
 # These must be available at runtime for the routing-slip PDF endpoint
+RUN mkdir -p /app/.next/server/chunks/data
 COPY --from=builder /app/node_modules/pdfkit/js/data /app/.next/server/chunks/data
+# Also ensure fonts are available in node_modules at runtime
+COPY --from=builder /app/node_modules/pdfkit/js/data /app/node_modules/pdfkit/js/data
 
 EXPOSE 3000
 
