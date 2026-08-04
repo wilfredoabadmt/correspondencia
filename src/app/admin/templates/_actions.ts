@@ -16,9 +16,11 @@ export interface DocumentTemplateModel {
     createdAt: string;
     /** R2 object key for the stored .docx file */
     fileKey?: string;
+    /** In-memory buffer for uploaded template file */
+    fileBuffer?: Buffer;
 }
 
-// In-memory metadata store (file content lives in R2)
+// In-memory metadata store (file content lives in R2 or memory)
 let TEMPLATE_STORE: DocumentTemplateModel[] = [
     {
         id: 'tpl-inf-01',
@@ -91,6 +93,17 @@ function getStorageService(): IStorageService | null {
     }
 }
 
+function mapDocTypeToCode(docType: string): string {
+    const norm = docType.toLowerCase().trim();
+    if (norm.includes('informe') || norm === 'inf') return 'INF';
+    if (norm.includes('nota') || norm === 'not') return 'NOT';
+    if (norm.includes('carta') || norm === 'car') return 'CAR';
+    if (norm.includes('memor') || norm === 'mem') return 'MEM';
+    if (norm.includes('circul') || norm === 'cir') return 'CIR';
+    if (norm.includes('instruct') || norm === 'ins') return 'INS';
+    return 'INF';
+}
+
 async function checkAdminAuth() {
     const session = await auth();
     if (!session?.user?.organizationId) {
@@ -105,7 +118,7 @@ async function checkAdminAuth() {
 
 export async function listDocumentTemplates(): Promise<DocumentTemplateModel[]> {
     await checkAdminAuth();
-    return TEMPLATE_STORE.map(({ fileKey, ...rest }) => rest);
+    return TEMPLATE_STORE.map(({ fileKey, fileBuffer, ...rest }) => rest);
 }
 
 export async function uploadDocumentTemplate(formData: FormData): Promise<DocumentTemplateModel> {
@@ -128,15 +141,16 @@ export async function uploadDocumentTemplate(formData: FormData): Promise<Docume
 
     const newId = `tpl-${documentType.toLowerCase()}-${Date.now()}`;
 
-    // Upload file to R2 if provided
+    let fileBuffer: Buffer | undefined;
     let fileKey: string | undefined;
+
     if (file) {
+        fileBuffer = Buffer.from(await file.arrayBuffer());
         const storage = getStorageService();
         if (storage) {
             try {
-                const buffer = Buffer.from(await file.arrayBuffer());
                 fileKey = `templates/${newId}/${file.name}`;
-                await storage.uploadFile(fileKey, buffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                await storage.uploadFile(fileKey, fileBuffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
             } catch (e) {
                 console.error('[uploadDocumentTemplate] Failed to upload to R2:', e);
                 fileKey = undefined;
@@ -154,10 +168,11 @@ export async function uploadDocumentTemplate(formData: FormData): Promise<Docume
         isActive: true,
         createdAt: new Date().toISOString(),
         fileKey,
+        fileBuffer,
     };
 
     TEMPLATE_STORE.unshift(newTemplate);
-    return { ...newTemplate, fileKey: undefined };
+    return { ...newTemplate, fileKey: undefined, fileBuffer: undefined };
 }
 
 export async function setActiveTemplate(id: string): Promise<void> {
@@ -194,7 +209,7 @@ export async function updateDocumentTemplate(
     if (data.version) template.version = data.version;
     if (data.documentType) template.documentType = data.documentType;
 
-    return { ...template, fileKey: undefined };
+    return { ...template, fileKey: undefined, fileBuffer: undefined };
 }
 
 export async function replaceTemplateFile(
@@ -208,12 +223,14 @@ export async function replaceTemplateFile(
     const file = formData.get('file') as File | null;
     if (!file) return null;
 
+    const buffer = Buffer.from(await file.arrayBuffer());
+    template.fileBuffer = buffer;
+
     // Upload new file to R2
     const storage = getStorageService();
     const fileKey = `templates/${id}/${file.name}`;
     if (storage) {
         try {
-            const buffer = Buffer.from(await file.arrayBuffer());
             await storage.uploadFile(fileKey, buffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         } catch (e) {
             console.error('[replaceTemplateFile] Failed to upload to R2:', e);
@@ -226,28 +243,56 @@ export async function replaceTemplateFile(
     template.createdAt = new Date().toISOString();
     template.fileKey = fileKey;
 
-    return { ...template, fileKey: undefined };
+    return { ...template, fileKey: undefined, fileBuffer: undefined };
 }
 
 /**
- * Returns the .docx file buffer from R2 for a template.
+ * Returns the .docx file buffer for a template or active template for document.
  */
 export async function serveTemplateFile(
     id: string,
     organizationId: string
 ): Promise<{ buffer: number[]; fileName: string } | null> {
     try {
-        const template = TEMPLATE_STORE.find(t => t.id === id);
-        if (!template || !template.fileKey) return null;
+        let template = TEMPLATE_STORE.find(t => t.id === id);
 
-        const storage = getStorageService();
-        if (!storage || !template.fileKey) return null;
+        if (!template) {
+            const upperId = id.toUpperCase();
+            template = TEMPLATE_STORE.find(t => t.documentType === upperId && t.isActive);
 
-        const buf = await storage.getFileBuffer(template.fileKey);
-        return { buffer: Array.from(buf), fileName: template.fileName };
+            if (!template) {
+                try {
+                    const docRepo = container.resolve<any>(InjectionTokens.DocumentRepository);
+                    const doc = await docRepo.findDetailsById({ id, organizationId });
+                    if (doc?.documentType) {
+                        const typeCode = mapDocTypeToCode(doc.documentType);
+                        template = TEMPLATE_STORE.find(t => t.documentType === typeCode && t.isActive);
+                    }
+                } catch {
+                    // Ignore repo error
+                }
+            }
+        }
+
+        if (!template) return null;
+
+        if (template.fileBuffer) {
+            return { buffer: Array.from(template.fileBuffer), fileName: template.fileName };
+        }
+
+        if (template.fileKey) {
+            const storage = getStorageService();
+            if (storage) {
+                const buf = await storage.getFileBuffer(template.fileKey);
+                return { buffer: Array.from(buf), fileName: template.fileName };
+            }
+        }
+
+        return null;
     } catch (err) {
         console.error('[serveTemplateFile] Storage error, falling back to generator:', err);
         return null;
     }
 }
+
 
