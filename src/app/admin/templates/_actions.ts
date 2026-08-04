@@ -121,6 +121,21 @@ export async function listDocumentTemplates(): Promise<DocumentTemplateModel[]> 
     return TEMPLATE_STORE.map(({ fileKey, fileBuffer, ...rest }) => rest);
 }
 
+import fs from 'fs';
+import path from 'path';
+
+const UPLOADS_DIR = path.join(process.cwd(), 'uploads', 'templates');
+
+function ensureUploadsDir() {
+    try {
+        if (!fs.existsSync(UPLOADS_DIR)) {
+            fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+        }
+    } catch (e) {
+        console.error('[templates] Failed to create uploads dir:', e);
+    }
+}
+
 export async function uploadDocumentTemplate(formData: FormData): Promise<DocumentTemplateModel> {
     await checkAdminAuth();
 
@@ -146,6 +161,13 @@ export async function uploadDocumentTemplate(formData: FormData): Promise<Docume
 
     if (file) {
         fileBuffer = Buffer.from(await file.arrayBuffer());
+        ensureUploadsDir();
+        try {
+            await fs.promises.writeFile(path.join(UPLOADS_DIR, `${newId}.docx`), fileBuffer);
+        } catch (e) {
+            console.error('[uploadDocumentTemplate] Failed to save to local disk:', e);
+        }
+
         const storage = getStorageService();
         if (storage) {
             try {
@@ -226,6 +248,13 @@ export async function replaceTemplateFile(
     const buffer = Buffer.from(await file.arrayBuffer());
     template.fileBuffer = buffer;
 
+    ensureUploadsDir();
+    try {
+        await fs.promises.writeFile(path.join(UPLOADS_DIR, `${id}.docx`), buffer);
+    } catch (e) {
+        console.error('[replaceTemplateFile] Failed to save to local disk:', e);
+    }
+
     // Upload new file to R2
     const storage = getStorageService();
     const fileKey = `templates/${id}/${file.name}`;
@@ -276,15 +305,31 @@ export async function serveTemplateFile(
 
         if (!template) return null;
 
+        // 1. In-memory buffer
         if (template.fileBuffer) {
             return { buffer: Array.from(template.fileBuffer), fileName: template.fileName };
         }
 
+        // 2. Local disk file
+        ensureUploadsDir();
+        const diskPath = path.join(UPLOADS_DIR, `${template.id}.docx`);
+        if (fs.existsSync(diskPath)) {
+            try {
+                const buf = await fs.promises.readFile(diskPath);
+                template.fileBuffer = buf;
+                return { buffer: Array.from(buf), fileName: template.fileName };
+            } catch (e) {
+                console.error('[serveTemplateFile] Failed to read from local disk:', e);
+            }
+        }
+
+        // 3. R2 Cloud storage
         if (template.fileKey) {
             const storage = getStorageService();
             if (storage) {
                 try {
                     const buf = await storage.getFileBuffer(template.fileKey);
+                    template.fileBuffer = buf;
                     return { buffer: Array.from(buf), fileName: template.fileName };
                 } catch {
                     // Fallthrough to generator fallback
@@ -292,16 +337,16 @@ export async function serveTemplateFile(
             }
         }
 
-        // Fallback: generate a default docx template buffer using DocxGeneratorService with template.fileName
+        // 4. Fallback: generate a default docx template buffer using DocxGeneratorService with template.fileName
         try {
             const docxService = container.resolve<any>(InjectionTokens.DocxGeneratorService);
             const genBuffer = await docxService.generateTemplate({
-                citeCode: 'AEV-INF-2026-001',
+                citeCode: 'INF-001/2026',
                 dateStr: new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' }),
-                recipientName: 'Director General Ejecutivo',
-                recipientRole: 'AEVIVIENDA',
-                senderName: 'Servidor Público Responsable',
-                senderRole: 'AEVIVIENDA',
+                recipientName: 'Director General',
+                recipientRole: 'Responsable',
+                senderName: 'Servidor Público',
+                senderRole: 'Encargado',
                 subject: template.title,
                 documentType: template.documentType,
             });
@@ -314,6 +359,7 @@ export async function serveTemplateFile(
         return null;
     }
 }
+
 
 
 

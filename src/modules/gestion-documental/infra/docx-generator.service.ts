@@ -81,7 +81,7 @@ export class DocxGeneratorService implements IDocxGeneratorService {
                     properties: {},
                     children: [
                         new Paragraph({
-                            text: 'AGENCIA ESTATAL DE VIVIENDA',
+                            text: 'DOCUMENTO OFICIAL INSTITUCIONAL',
                             heading: HeadingLevel.HEADING_1,
                             alignment: AlignmentType.CENTER,
                         }),
