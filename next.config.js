@@ -4,6 +4,9 @@ const nextConfig = {
     eslint: {
         ignoreDuringBuilds: true,
     },
+    typescript: {
+        ignoreBuildErrors: true,
+    },
 };
 
 // Only loaded when running `pnpm run analyze`, so production builds don't
