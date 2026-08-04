@@ -22,7 +22,44 @@ interface DocumentsClientViewProps {
 }
 
 export function DocumentsClientView({ initialDocuments, organizationId }: DocumentsClientViewProps) {
-    const [documents, setDocuments] = useState<DocumentItem[]>(
+    // Load from localStorage first (temporary persistence)
+    const getInitialDocuments = () => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = localStorage.getItem(`generated-docs-${organizationId}`);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        return parsed;
+                    }
+                }
+            } catch (e) {}
+        }
+        return initialDocuments.length > 0 ? initialDocuments : [
+            {
+                id: 'doc-sample-1',
+                trackingId: 'DOC-ORGA-001',
+                trackingCode: 'AEV/DNP/INF/Nro.0028/2026',
+                subject: 'INFORME DE EVALUACIÓN TÉCNICA DE PROYECTO DE VIVIENDA',
+                documentType: 'Informe',
+                sender: 'Juan José Espejo (Director General)',
+                status: 'En Proceso',
+                receptionDate: new Date().toISOString(),
+            },
+            {
+                id: 'doc-sample-2',
+                trackingId: 'DOC-ORGA-002',
+                trackingCode: 'AEV/DNP/NOT/Nro.0011/2026',
+                subject: 'ESTADO DEL SISTEMA DE GESTIÓN DE CORRESPONDENCIA SIGEC',
+                documentType: 'Nota Interna',
+                sender: 'Edwin Yujra (Jefe de Unidad TIC)',
+                status: 'Recibido',
+                receptionDate: new Date(Date.now() - 86400000).toISOString(),
+            },
+        ];
+    };
+
+    const [documents, setDocuments] = useState<DocumentItem[]>(getInitialDocuments());
         initialDocuments.length > 0
             ? initialDocuments
             : [
@@ -86,24 +123,18 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
             receptionDate: new Date().toISOString(),
         };
 
-        // Save to database
+        // TEMPORARY: Save only in client memory (localStorage) until DB issue is fixed
+        const updatedDocs = [newDoc, ...documents];
+        setDocuments(updatedDocs);
+
+        // Persist in localStorage so it survives navigation
         try {
-            await createGeneratedDocument({
-                trackingCode: citeCode,
-                trackingId: trackingId,
-                subject: subject.trim().toUpperCase(),
-                documentType: docType,
-                sender: recipient || 'Servidor Público Responsable',
-                status: modalMode === 'WITH_ROUTE' ? 'En Proceso' : 'Borrador Sin Hoja de Ruta',
-                organizationId,
-            });
-            
-            // Update local state only after successful save
-            setDocuments([newDoc, ...documents]);
-            setSuccessMessage(`¡Documento ${citeCode} generado exitosamente!`);
-        } catch (error) {
-            setSuccessMessage('Error al guardar el documento. Intente nuevamente.');
+            localStorage.setItem(`generated-docs-${organizationId}`, JSON.stringify(updatedDocs));
+        } catch (e) {
+            console.warn('Could not save to localStorage');
         }
+
+        setSuccessMessage(`¡Documento ${citeCode} generado exitosamente! (guardado temporalmente)`);
 
         setIsModalOpen(false);
 
