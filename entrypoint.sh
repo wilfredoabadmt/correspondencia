@@ -14,4 +14,11 @@ fi
 
 # Start the application
 echo "🌐 Starting Next.js server..."
-exec pnpm run start:prod
+if [ -f "server.js" ]; then
+  exec node server.js
+elif [ -f ".next/standalone/server.js" ]; then
+  exec node .next/standalone/server.js
+else
+  exec pnpm run start:prod
+fi
+

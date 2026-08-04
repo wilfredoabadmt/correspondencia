@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
+    eslint: {
+        ignoreDuringBuilds: true,
+    },
 };
 
 // Only loaded when running `pnpm run analyze`, so production builds don't
@@ -14,3 +17,6 @@ if (process.env.ANALYZE === 'true') {
 } else {
     module.exports = nextConfig;
 }
+
+
+

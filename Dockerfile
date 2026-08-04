@@ -26,6 +26,8 @@ ENV R2_ACCESS_KEY_ID=$R2_ACCESS_KEY_ID
 ENV R2_SECRET_ACCESS_KEY=$R2_SECRET_ACCESS_KEY
 ENV R2_BUCKET_NAME=$R2_BUCKET_NAME
 ENV AUTH_SECRET=$AUTH_SECRET
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV BUILD_STANDALONE=true
 
 RUN corepack enable pnpm && pnpm run build
 
@@ -34,28 +36,26 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Enable pnpm in production stage
 RUN corepack enable pnpm
 
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/db ./db
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
-
-# No need to copy pdfkit .afm files anymore - using built-in fonts
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# IMPORTANT: Only run next start at runtime.
-# Run migrations separately using: pnpm run db:migrate
-# Use entrypoint for better control
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 ENTRYPOINT ["/app/entrypoint.sh"]
+

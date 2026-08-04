@@ -7,6 +7,7 @@ const path = require('path');
 
 const SRC = path.join(__dirname, '..', 'node_modules', 'pdfkit', 'js', 'data');
 const DEST = path.join(__dirname, '..', '.next', 'server', 'chunks', 'data');
+const DEST_STANDALONE = path.join(__dirname, '..', '.next', 'standalone', '.next', 'server', 'chunks', 'data');
 
 function copyDir(src, dest) {
     if (!fs.existsSync(dest)) {
@@ -30,9 +31,13 @@ try {
         process.exit(0);
     }
     copyDir(SRC, DEST);
+    if (fs.existsSync(path.join(__dirname, '..', '.next', 'standalone'))) {
+        copyDir(SRC, DEST_STANDALONE);
+    }
     const count = fs.readdirSync(DEST).filter(f => f.endsWith('.afm')).length;
     console.log(`[copy-pdfkit-data] Copied ${count} AFM files to ${DEST}`);
 } catch (err) {
     console.error('[copy-pdfkit-data] Error:', err.message);
     process.exit(1);
 }
+
