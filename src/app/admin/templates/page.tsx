@@ -8,6 +8,7 @@ import {
     uploadDocumentTemplate,
     setActiveTemplate,
     deleteDocumentTemplate,
+    updateDocumentTemplate,
     type DocumentTemplateModel,
 } from './_actions';
 
@@ -45,8 +46,31 @@ export default function TemplatesManagementPage() {
         setEditingTemplate(template);
         setEditTitle(template.title);
         setEditVersion(template.version);
-        setEditType(template.type);
+        setEditType(template.documentType);
         setIsEditModalOpen(true);
+    };
+
+    const handleUpdateTemplate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingTemplate) return;
+
+        try {
+            setSubmitting(true);
+            setMessage(null);
+            await updateDocumentTemplate(editingTemplate.id, {
+                title: editTitle.trim(),
+                version: editVersion.trim(),
+                documentType: editType,
+            });
+            setMessage(`Plantilla "${editTitle.trim()}" actualizada correctamente.`);
+            setIsEditModalOpen(false);
+            setEditingTemplate(null);
+            await loadTemplates();
+        } catch (err: any) {
+            setMessage(`Error al actualizar la plantilla: ${err.message}`);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const loadTemplates = async () => {
