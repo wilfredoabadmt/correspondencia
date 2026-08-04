@@ -18,7 +18,8 @@ export class PdfGeneratorService implements IPdfGeneratorService {
             doc.on('end', () => resolve(Buffer.concat(buffers)));
             doc.on('error', (err) => reject(err));
 
-            // Use default font only - no explicit .font() calls
+            // Use Courier font (more reliable in Docker than Helvetica)
+            doc.font('Courier');
             doc.fontSize(14).text('AGENCIA ESTATAL DE VIVIENDA', { align: 'center' });
             doc.fontSize(10).text('ESTADO PLURINACIONAL DE BOLIVIA', { align: 'center' });
             doc.moveDown(0.5);
