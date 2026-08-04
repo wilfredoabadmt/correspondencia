@@ -45,13 +45,13 @@ export default async function DocumentDetailPage({ params }: DocumentDetailPageP
         initialPaginatedHistory = { history: [], hasMore: false };
     }
 
-    // Fallback for sample demo documents if not found in database
-    if (!documentDetails && documentId.includes('sample')) {
+    // Fallback for sample demo documents or dynamically generated documents not yet in database
+    if (!documentDetails && (documentId.includes('sample') || documentId.includes('doc-gen') || documentId.includes('tpl'))) {
         documentDetails = {
             id: documentId,
-            trackingId: 'DOC-ORGA-001',
-            trackingCode: 'AEV/DNP/INF/Nro.0028/2026',
-            subject: 'INFORME DE EVALUACIÓN TÉCNICA Y GESTIÓN DE CORRESPONDENCIA SIGEC',
+            trackingId: `E-2026-${documentId.slice(-5)}`,
+            trackingCode: `AEV/DNP/INF/Nro.${documentId.slice(-4)}/2026`,
+            subject: 'DOCUMENTO GENERADO — INFORME DE EVALUACIÓN TÉCNICA Y GESTIÓN SIGEC',
             documentType: 'Informe',
             sender: 'Juan José Espejo (Director General)',
             status: 'En Proceso',
