@@ -40,8 +40,13 @@ const DEFAULT_CONFIG: RoutingSlipConfig = {
     updatedAt: new Date().toISOString(),
 };
 
-function getStorageService(): IStorageService {
-    return container.resolve<IStorageService>(InjectionTokens.StorageService);
+function getStorageService(): IStorageService | null {
+    try {
+        return container.resolve<IStorageService>(InjectionTokens.StorageService);
+    } catch (e) {
+        console.error('[routing-slip-config] Failed to resolve StorageService from container:', e);
+        return null;
+    }
 }
 
 async function checkAdminAuth() {
@@ -58,7 +63,9 @@ async function checkAdminAuth() {
 
 async function loadConfigFromR2(): Promise<RoutingSlipConfig> {
     try {
-        const buf = await getStorageService().getFileBuffer(CONFIG_KEY);
+        const storage = getStorageService();
+        if (!storage) return DEFAULT_CONFIG;
+        const buf = await storage.getFileBuffer(CONFIG_KEY);
         return JSON.parse(buf.toString('utf-8'));
     } catch {
         return DEFAULT_CONFIG;
@@ -66,8 +73,10 @@ async function loadConfigFromR2(): Promise<RoutingSlipConfig> {
 }
 
 async function saveConfigToR2(config: RoutingSlipConfig): Promise<void> {
+    const storage = getStorageService();
+    if (!storage) throw new Error('R2 Storage no está configurado');
     const body = Buffer.from(JSON.stringify(config, null, 2), 'utf-8');
-    await getStorageService().uploadFile(CONFIG_KEY, body, 'application/json');
+    await storage.uploadFile(CONFIG_KEY, body, 'application/json');
 }
 
 export async function getRoutingSlipConfig(): Promise<RoutingSlipConfig> {
@@ -99,13 +108,15 @@ export async function saveRoutingSlipConfig(formData: FormData): Promise<Routing
     const logoFile = formData.get('logoFile') as File | null;
     if (logoFile && logoFile.size > 0) {
         try {
-            const buffer = Buffer.from(await logoFile.arrayBuffer());
-            const ext = logoFile.name.split('.').pop() || 'png';
-            logoKey = `${LOGO_KEY}.${ext}`;
-            await getStorageService().uploadFile(logoKey, buffer, logoFile.type || 'image/png');
+            const storage = getStorageService();
+            if (storage) {
+                const buffer = Buffer.from(await logoFile.arrayBuffer());
+                const ext = logoFile.name.split('.').pop() || 'png';
+                logoKey = `${LOGO_KEY}.${ext}`;
+                await storage.uploadFile(logoKey, buffer, logoFile.type || 'image/png');
+            }
         } catch (e) {
             console.error('[saveRoutingSlipConfig] Failed to upload logo to R2:', e);
-            // Continue without logo upload
         }
     }
 
@@ -138,5 +149,7 @@ export async function saveRoutingSlipConfig(formData: FormData): Promise<Routing
 export async function getRoutingSlipLogoUrl(): Promise<string | null> {
     const config = await loadConfigFromR2();
     if (!config.logoKey) return null;
-    return getStorageService().getDownloadUrl(config.logoKey);
+    const storage = getStorageService();
+    if (!storage) return null;
+    return storage.getDownloadUrl(config.logoKey);
 }

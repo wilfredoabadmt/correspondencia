@@ -82,8 +82,13 @@ let TEMPLATE_STORE: DocumentTemplateModel[] = [
     },
 ];
 
-function getStorageService(): IStorageService {
-    return container.resolve<IStorageService>(InjectionTokens.StorageService);
+function getStorageService(): IStorageService | null {
+    try {
+        return container.resolve<IStorageService>(InjectionTokens.StorageService);
+    } catch (e) {
+        console.error('[templates] Failed to resolve StorageService from container:', e);
+        return null;
+    }
 }
 
 async function checkAdminAuth() {
@@ -126,9 +131,17 @@ export async function uploadDocumentTemplate(formData: FormData): Promise<Docume
     // Upload file to R2 if provided
     let fileKey: string | undefined;
     if (file) {
-        const buffer = Buffer.from(await file.arrayBuffer());
-        fileKey = `templates/${newId}/${file.name}`;
-        await getStorageService().uploadFile(fileKey, buffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        const storage = getStorageService();
+        if (storage) {
+            try {
+                const buffer = Buffer.from(await file.arrayBuffer());
+                fileKey = `templates/${newId}/${file.name}`;
+                await storage.uploadFile(fileKey, buffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+            } catch (e) {
+                console.error('[uploadDocumentTemplate] Failed to upload to R2:', e);
+                fileKey = undefined;
+            }
+        }
     }
 
     const newTemplate: DocumentTemplateModel = {
@@ -196,9 +209,16 @@ export async function replaceTemplateFile(
     if (!file) return null;
 
     // Upload new file to R2
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const storage = getStorageService();
     const fileKey = `templates/${id}/${file.name}`;
-    await getStorageService().uploadFile(fileKey, buffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    if (storage) {
+        try {
+            const buffer = Buffer.from(await file.arrayBuffer());
+            await storage.uploadFile(fileKey, buffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        } catch (e) {
+            console.error('[replaceTemplateFile] Failed to upload to R2:', e);
+        }
+    }
 
     template.fileName = file.name;
     template.fileSize = (file.size / 1024).toFixed(1) + ' KB';
@@ -219,6 +239,9 @@ export async function serveTemplateFile(
     const template = TEMPLATE_STORE.find(t => t.id === id);
     if (!template || !template.fileKey) return null;
 
-    const buf = await getStorageService().getFileBuffer(template.fileKey);
+    const storage = getStorageService();
+    if (!storage || !template.fileKey) return null;
+
+    const buf = await storage.getFileBuffer(template.fileKey);
     return { buffer: Array.from(buf), fileName: template.fileName };
 }
