@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { createGeneratedDocument } from '../actions';
 
 interface DocumentItem {
     id: string;
@@ -62,7 +63,7 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
     const [pageCount, setPageCount] = useState('1');
     const [successMessage, setSuccessMessage] = useState('');
 
-    const handleCreateDocument = (e: React.FormEvent) => {
+    const handleCreateDocument = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!subject.trim()) return;
 
@@ -70,7 +71,7 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
         const randomNum = Math.floor(1000 + Math.random() * 9000);
         const prefix = docType === 'Informe' ? 'INF' : docType === 'Nota Interna' ? 'NOT' : docType === 'Carta' ? 'CAR' : 'CIR';
         const citeCode = modalMode === 'WITH_ROUTE' 
-            ? `AEV/DNP/${prefix}/Nro.${randomNum}/${dateYear}`
+            ? `AEV/DNP/${prefix}/Nro.${randomNum}/${dateYear}` 
             : `BORRADOR-${prefix}-${randomNum}`;
         const trackingId = `DOC-ORGA-${randomNum}`;
 
@@ -85,8 +86,25 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
             receptionDate: new Date().toISOString(),
         };
 
-        setDocuments([newDoc, ...documents]);
-        setSuccessMessage(`¡Documento ${citeCode} generado exitosamente!`);
+        // Save to database
+        try {
+            await createGeneratedDocument({
+                trackingCode: citeCode,
+                trackingId: trackingId,
+                subject: subject.trim().toUpperCase(),
+                documentType: docType,
+                sender: recipient || 'Servidor Público Responsable',
+                status: modalMode === 'WITH_ROUTE' ? 'En Proceso' : 'Borrador Sin Hoja de Ruta',
+                organizationId,
+            });
+            
+            // Update local state only after successful save
+            setDocuments([newDoc, ...documents]);
+            setSuccessMessage(`¡Documento ${citeCode} generado exitosamente!`);
+        } catch (error) {
+            setSuccessMessage('Error al guardar el documento. Intente nuevamente.');
+        }
+
         setIsModalOpen(false);
 
         // Reset form
