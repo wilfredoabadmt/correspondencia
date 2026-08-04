@@ -60,31 +60,6 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
     };
 
     const [documents, setDocuments] = useState<DocumentItem[]>(getInitialDocuments());
-        initialDocuments.length > 0
-            ? initialDocuments
-            : [
-                {
-                    id: 'doc-sample-1',
-                    trackingId: 'DOC-ORGA-001',
-                    trackingCode: 'AEV/DNP/INF/Nro.0028/2026',
-                    subject: 'INFORME DE EVALUACIÓN TÉCNICA DE PROYECTO DE VIVIENDA',
-                    documentType: 'Informe',
-                    sender: 'Juan José Espejo (Director General)',
-                    status: 'En Proceso',
-                    receptionDate: new Date().toISOString(),
-                },
-                {
-                    id: 'doc-sample-2',
-                    trackingId: 'DOC-ORGA-002',
-                    trackingCode: 'AEV/DNP/NOT/Nro.0011/2026',
-                    subject: 'ESTADO DEL SISTEMA DE GESTIÓN DE CORRESPONDENCIA SIGEC',
-                    documentType: 'Nota Interna',
-                    sender: 'Edwin Yujra (Jefe de Unidad TIC)',
-                    status: 'Recibido',
-                    receptionDate: new Date(Date.now() - 86400000).toISOString(),
-                },
-            ]
-    );
 
     const [filterQuery, setFilterQuery] = useState('');
     const [filterType, setFilterType] = useState('Todos');
