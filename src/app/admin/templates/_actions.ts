@@ -283,16 +283,37 @@ export async function serveTemplateFile(
         if (template.fileKey) {
             const storage = getStorageService();
             if (storage) {
-                const buf = await storage.getFileBuffer(template.fileKey);
-                return { buffer: Array.from(buf), fileName: template.fileName };
+                try {
+                    const buf = await storage.getFileBuffer(template.fileKey);
+                    return { buffer: Array.from(buf), fileName: template.fileName };
+                } catch {
+                    // Fallthrough to generator fallback
+                }
             }
         }
 
-        return null;
+        // Fallback: generate a default docx template buffer using DocxGeneratorService with template.fileName
+        try {
+            const docxService = container.resolve<any>(InjectionTokens.DocxGeneratorService);
+            const genBuffer = await docxService.generateTemplate({
+                citeCode: 'AEV-INF-2026-001',
+                dateStr: new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' }),
+                recipientName: 'Director General Ejecutivo',
+                recipientRole: 'AEVIVIENDA',
+                senderName: 'Servidor Público Responsable',
+                senderRole: 'AEVIVIENDA',
+                subject: template.title,
+                documentType: template.documentType,
+            });
+            return { buffer: Array.from(genBuffer), fileName: template.fileName };
+        } catch {
+            return null;
+        }
     } catch (err) {
-        console.error('[serveTemplateFile] Storage error, falling back to generator:', err);
+        console.error('[serveTemplateFile] Storage error:', err);
         return null;
     }
 }
+
 
 

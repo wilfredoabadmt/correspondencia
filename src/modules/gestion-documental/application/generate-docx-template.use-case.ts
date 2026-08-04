@@ -27,7 +27,9 @@ export class GenerateDocxTemplateUseCase {
 
         const effectiveDoc = doc || {
             id: documentId,
-            trackingCode: documentId.includes('sample') ? 'AEV/DNP/INF/Nro.0028/2026' : `DOC-${documentId.substring(0, 8)}`,
+            trackingCode: documentId.includes('sample')
+                ? 'AEV/DNP/INF/Nro.0028/2026'
+                : (documentId.startsWith('doc-gen-') ? `DOC-2026-${documentId.replace('doc-gen-', '').substring(0, 6)}` : `DOC-${documentId.substring(0, 8)}`),
             trackingId: `E-2026-${documentId.substring(0, 5)}`,
             subject: 'INFORME DE EVALUACIÓN Y GESTIÓN DE CORRESPONDENCIA SIGEC',
             sender: 'Edwin Yujra (Jefe TIC)',
