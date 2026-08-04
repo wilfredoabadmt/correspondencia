@@ -8,6 +8,9 @@ const nextConfig = {
             '/api/documents/\\[documentId\\]/routing-slip': [
                 './node_modules/pdfkit/js/data/**/*',
             ],
+            '/api/reports/pdf': [
+                './node_modules/pdfkit/js/data/**/*',
+            ],
         },
     },
 };
