@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { container, InjectionTokens } from '~/core/container';
 import { GetDocumentDetailsUseCase } from '~/modules/gestion-documental/application/get-document-details.use-case';
 import { DocumentDetailsCard } from '~/components/document/document-details-card';
+import { ClientDocumentLoader } from './_client-document-loader';
 import { DocumentHistorySection } from '~/components/document/document-history-section';
 import { getPaginatedDocumentHistory } from './_actions';
 import { auth } from '~/modules/auth/lib/auth';
@@ -45,17 +46,19 @@ export default async function DocumentDetailPage({ params }: DocumentDetailPageP
         initialPaginatedHistory = { history: [], hasMore: false };
     }
 
-    // Fallback for sample demo documents or dynamically generated documents not yet in database
-    if (!documentDetails && (documentId.includes('sample') || documentId.includes('doc-gen') || documentId.includes('tpl'))) {
+    // Fallback for dynamically generated documents (stored in localStorage)
+    if (!documentDetails && documentId.startsWith('doc-gen-')) {
+        // We will handle this on the client side via a small component
+        // For now, show a placeholder that will be replaced by client-side data
         documentDetails = {
             id: documentId,
-            trackingId: `E-2026-${documentId.slice(-5)}`,
-            trackingCode: `AEV/DNP/INF/Nro.${documentId.slice(-4)}/2026`,
-            subject: 'DOCUMENTO GENERADO — INFORME DE EVALUACIÓN TÉCNICA Y GESTIÓN SIGEC',
-            documentType: 'Informe',
-            sender: 'Juan José Espejo (Director General)',
+            trackingId: 'CARGANDO...',
+            trackingCode: 'CARGANDO...',
+            subject: 'Cargando información del documento...',
+            documentType: 'Documento',
+            sender: '—',
             status: 'En Proceso',
-            destinationAreaName: 'Unidad de Tecnologías de Información y Comunicación',
+            destinationAreaName: '—',
             receptionDate: new Date(),
             createdAt: new Date(),
             downloadUrl: null,
@@ -82,7 +85,11 @@ export default async function DocumentDetailPage({ params }: DocumentDetailPageP
                     </p>
                 </div>
 
-                <DocumentDetailsCard document={documentDetails} />
+                {documentId.startsWith('doc-gen-') ? (
+                    <ClientDocumentLoader documentId={documentId} organizationId={organizationId} />
+                ) : (
+                    <DocumentDetailsCard document={documentDetails} />
+                )}
                 <DocumentHistorySection
                     documentId={documentId}
                     initialPaginatedHistory={initialPaginatedHistory}

@@ -16,7 +16,7 @@ export async function createGeneratedDocument(data: {
     const docRepo = container.resolve<IDocumentRepository>(InjectionTokens.DocumentRepository);
 
     try {
-        // Create a minimal document record
+        // Minimal insert - only essential fields
         const doc = await docRepo.create({
             organizationId: data.organizationId,
             trackingId: data.trackingId,
@@ -26,28 +26,22 @@ export async function createGeneratedDocument(data: {
             sender: data.sender,
             status: data.status,
             receptionDate: new Date(),
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            destinationAreaId: null,
-            areaHierarchyId: null,
-            currentUserId: null,
-            expedienteId: null,
-            groupedIntoDocumentId: null,
-            folderCategory: null,
-            archiveObservations: null,
-            fileKey: null,
-            downloadUrl: null,
         });
 
         revalidatePath('/documents');
         return { success: true, id: doc.id };
     } catch (error: any) {
-        console.error('Error creating document:', error);
-        // Return detailed error for debugging
+        console.error('=== DOCUMENT CREATION ERROR ===');
+        console.error('Error message:', error?.message);
+        console.error('Error code:', error?.code);
+        console.error('Error detail:', error?.detail);
+        console.error('Full error:', error);
+        
         return { 
             success: false, 
-            error: error?.message || 'Unknown database error',
-            details: error?.stack?.split('\n')[0] || ''
+            error: error?.message || 'Database error',
+            code: error?.code || 'UNKNOWN',
+            detail: error?.detail || ''
         };
     }
 }
