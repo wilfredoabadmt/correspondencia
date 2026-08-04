@@ -164,3 +164,22 @@ export async function updateDocumentTemplate(
 
     return template;
 }
+
+export async function replaceTemplateFile(
+    id: string,
+    formData: FormData
+): Promise<DocumentTemplateModel | null> {
+    await checkAdminAuth();
+    const template = TEMPLATE_STORE.find(t => t.id === id);
+    if (!template) return null;
+
+    const file = formData.get('file') as File | null;
+    if (!file) return null;
+
+    template.fileName = file.name;
+    template.fileSize = (file.size / 1024).toFixed(1) + ' KB';
+    template.version = formData.get('version') as string || template.version;
+    template.createdAt = new Date().toISOString();
+
+    return template;
+}

@@ -9,6 +9,7 @@ import {
     setActiveTemplate,
     deleteDocumentTemplate,
     updateDocumentTemplate,
+    replaceTemplateFile,
     type DocumentTemplateModel,
 } from './_actions';
 
@@ -42,12 +43,49 @@ export default function TemplatesManagementPage() {
     const [editVersion, setEditVersion] = useState('');
     const [editType, setEditType] = useState<'INF' | 'NOT' | 'CAR' | 'MEM' | 'CIR' | 'INS'>('INF');
 
+    // Replace file modal state
+    const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
+    const [replacingTemplate, setReplacingTemplate] = useState<DocumentTemplateModel | null>(null);
+    const [replaceFile, setReplaceFile] = useState<File | null>(null);
+    const [replaceVersion, setReplaceVersion] = useState('');
+
     const openEditModal = (template: DocumentTemplateModel) => {
         setEditingTemplate(template);
         setEditTitle(template.title);
         setEditVersion(template.version);
         setEditType(template.documentType);
         setIsEditModalOpen(true);
+    };
+
+    const openReplaceModal = (template: DocumentTemplateModel) => {
+        setReplacingTemplate(template);
+        setReplaceFile(null);
+        setReplaceVersion(template.version);
+        setIsReplaceModalOpen(true);
+    };
+
+    const handleReplaceFile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!replacingTemplate || !replaceFile) return;
+
+        try {
+            setSubmitting(true);
+            setMessage(null);
+            const formData = new FormData();
+            formData.append('file', replaceFile);
+            formData.append('version', replaceVersion);
+
+            await replaceTemplateFile(replacingTemplate.id, formData);
+            setMessage(`Modelo de plantilla "${replacingTemplate.title}" reemplazado correctamente.`);
+            setIsReplaceModalOpen(false);
+            setReplacingTemplate(null);
+            setReplaceFile(null);
+            await loadTemplates();
+        } catch (err: any) {
+            setMessage(`Error al reemplazar el modelo: ${err.message}`);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleUpdateTemplate = async (e: React.FormEvent) => {
@@ -285,6 +323,14 @@ export default function TemplatesManagementPage() {
                                             </button>
 
                                             <button
+                                                onClick={() => openReplaceModal(template)}
+                                                className="p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold transition-colors"
+                                                title="Reemplazar modelo .docx"
+                                            >
+                                                🔄
+                                            </button>
+
+                                            <button
                                                 onClick={() => handleDelete(template.id, template.title)}
                                                 className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition-colors"
                                                 title="Eliminar plantilla"
@@ -443,6 +489,73 @@ export default function TemplatesManagementPage() {
                                         className="px-6 py-2.5 rounded-xl font-bold text-xs text-white uppercase tracking-wider bg-blue-600 hover:bg-blue-500 shadow-md"
                                     >
                                         {submitting ? 'Subiendo...' : 'Subir Plantilla'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Replace File Modal */}
+                {isReplaceModalOpen && replacingTemplate && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+                        <div className="w-full max-w-lg glass-panel-glow rounded-3xl p-6 sm:p-8 space-y-5 border border-amber-500/40 shadow-2xl animate-fadeIn">
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                                <div>
+                                    <h3 className="text-lg font-bold text-white">Reemplazar Modelo Word</h3>
+                                    <p className="text-xs text-slate-400 mt-1">Actualice el archivo .docx de la plantilla <span className="text-amber-300 font-bold">{replacingTemplate.title}</span></p>
+                                </div>
+                                <button onClick={() => { setIsReplaceModalOpen(false); setReplacingTemplate(null); }} className="text-slate-400 hover:text-white font-bold">✕</button>
+                            </div>
+
+                            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700">
+                                <div className="flex items-center gap-2 text-xs text-slate-300">
+                                    <span>📦</span>
+                                    <span className="font-mono">{replacingTemplate.fileName}</span>
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">{replacingTemplate.version}</span>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleReplaceFile} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-300 mb-1">Nuevo Modelo Word (.docx)</label>
+                                    <div className="border-2 border-dashed border-slate-700 hover:border-amber-500 rounded-2xl p-4 text-center bg-slate-950/60 cursor-pointer transition-colors">
+                                        <input
+                                            type="file"
+                                            accept=".docx,.doc"
+                                            required
+                                            onChange={(e) => setReplaceFile(e.target.files?.[0] || null)}
+                                            className="w-full text-xs text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500/20 file:text-amber-300 hover:file:bg-amber-500/30"
+                                        />
+                                        <p className="text-[10px] text-slate-400 mt-2 font-mono">Seleccione el nuevo modelo Word que reemplazará al actual</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-300 mb-1">Nueva Versión</label>
+                                    <input
+                                        type="text"
+                                        value={replaceVersion}
+                                        onChange={(e) => setReplaceVersion(e.target.value)}
+                                        placeholder="v1.0"
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:border-amber-500 outline-none"
+                                    />
+                                </div>
+
+                                <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setIsReplaceModalOpen(false); setReplacingTemplate(null); }}
+                                        className="px-4 py-2.5 rounded-xl font-semibold text-xs text-slate-400 hover:text-white bg-slate-900"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={submitting || !replaceFile}
+                                        className="px-6 py-2.5 rounded-xl font-bold text-xs text-white uppercase tracking-wider bg-amber-600 hover:bg-amber-500 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {submitting ? 'Reemplazando...' : 'Reemplazar Modelo'}
                                     </button>
                                 </div>
                             </form>
