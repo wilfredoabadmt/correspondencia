@@ -32,18 +32,18 @@ export async function GET(request: NextRequest) {
             doc.on('end', () => resolve(Buffer.concat(buffers)));
             doc.on('error', (err) => reject(err));
 
-            doc.fontSize(14).font('Helvetica-Bold').text('AGENCIA ESTATAL DE VIVIENDA', { align: 'center' });
-            doc.fontSize(12).font('Helvetica-Bold').text('REPORTE GERENCIAL DE CORRESPONDENCIA', { align: 'center' });
-            doc.fontSize(9).font('Helvetica').text(`Fecha de Emisión: ${new Date().toLocaleDateString('es-PE')}`, { align: 'center' });
+            doc.fontSize(14).font('Courier-Bold').text('AGENCIA ESTATAL DE VIVIENDA', { align: 'center' });
+            doc.fontSize(12).font('Courier-Bold').text('REPORTE GERENCIAL DE CORRESPONDENCIA', { align: 'center' });
+            doc.fontSize(9).font('Courier').text(`Fecha de Emisión: ${new Date().toLocaleDateString('es-PE')}`, { align: 'center' });
             doc.moveDown(1);
 
             // Resumen de Totales
             doc.rect(36, 110, 540, 30).stroke();
-            doc.fontSize(9).font('Helvetica-Bold').text(`Total: ${report.summary.totalDocuments}  |  Pendientes: ${report.summary.pendingCount}  |  En Mora (> 5 días): ${report.summary.overdueCount}`, 45, 120);
+            doc.fontSize(9).font('Courier-Bold').text(`Total: ${report.summary.totalDocuments}  |  Pendientes: ${report.summary.pendingCount}  |  En Mora (> 5 días): ${report.summary.overdueCount}`, 45, 120);
 
             // Tabla de Registros
             let startY = 155;
-            doc.fontSize(8).font('Helvetica-Bold');
+            doc.fontSize(8).font('Courier-Bold');
             doc.text('CÓDIGO', 40, startY);
             doc.text('ASUNTO', 140, startY);
             doc.text('ESTADO', 380, startY);
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
                     doc.addPage();
                     currentY = 40;
                 }
-                doc.fontSize(8).font('Helvetica');
+                doc.fontSize(8).font('Courier');
                 doc.text(d.trackingCode, 40, currentY);
                 doc.text(d.subject, 140, currentY, { width: 230 });
                 doc.text(d.status, 380, currentY);

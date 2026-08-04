@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
+    serverExternalPackages: ['pdfkit'],
     experimental: {
         // Include pdfkit font data files (.afm) in the production bundle
         // so that Helvetica and other standard fonts work in Docker/Coolify
