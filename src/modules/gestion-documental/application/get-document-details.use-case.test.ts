@@ -21,6 +21,8 @@ class MockDocumentRepository implements IDocumentRepository {
 
 class MockStorageService implements IStorageService {
     getDownloadUrl = vi.fn();
+    uploadFile = vi.fn();
+    getFileBuffer = vi.fn();
 }
 
 describe('GetDocumentDetailsUseCase', () => {

@@ -1,4 +1,4 @@
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { injectable } from 'tsyringe';
 
@@ -31,5 +31,36 @@ export class R2StorageService implements IStorageService {
         return getSignedUrl(this.s3Client, command, {
             expiresIn: this.SIGNED_URL_EXPIRES_IN,
         });
+    }
+
+    async uploadFile(key: string, body: Buffer, contentType: string): Promise<string> {
+        await this.s3Client.send(new PutObjectCommand({
+            Bucket: this.BUCKET_NAME,
+            Key: key,
+            Body: body,
+            ContentType: contentType,
+        }));
+        return key;
+    }
+
+    async getFileBuffer(key: string): Promise<Buffer> {
+        const response = await this.s3Client.send(new GetObjectCommand({
+            Bucket: this.BUCKET_NAME,
+            Key: key,
+        }));
+
+        const stream = response.Body;
+        if (!stream) throw new Error('Empty response from R2');
+
+        // Convert readable stream to Buffer
+        const chunks: Uint8Array[] = [];
+        const reader = stream.transformToWebStream().getReader();
+        let done = false;
+        while (!done) {
+            const result = await reader.read();
+            done = result.done;
+            if (result.value) chunks.push(result.value);
+        }
+        return Buffer.concat(chunks);
     }
 }
