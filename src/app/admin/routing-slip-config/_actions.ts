@@ -98,10 +98,15 @@ export async function saveRoutingSlipConfig(formData: FormData): Promise<Routing
     let logoKey = current.logoKey;
     const logoFile = formData.get('logoFile') as File | null;
     if (logoFile && logoFile.size > 0) {
-        const buffer = Buffer.from(await logoFile.arrayBuffer());
-        const ext = logoFile.name.split('.').pop() || 'png';
-        logoKey = `${LOGO_KEY}.${ext}`;
-        await getStorageService().uploadFile(logoKey, buffer, logoFile.type || 'image/png');
+        try {
+            const buffer = Buffer.from(await logoFile.arrayBuffer());
+            const ext = logoFile.name.split('.').pop() || 'png';
+            logoKey = `${LOGO_KEY}.${ext}`;
+            await getStorageService().uploadFile(logoKey, buffer, logoFile.type || 'image/png');
+        } catch (e) {
+            console.error('[saveRoutingSlipConfig] Failed to upload logo to R2:', e);
+            // Continue without logo upload
+        }
     }
 
     const config: RoutingSlipConfig = {
@@ -120,7 +125,13 @@ export async function saveRoutingSlipConfig(formData: FormData): Promise<Routing
         updatedAt: new Date().toISOString(),
     };
 
-    await saveConfigToR2(config);
+    try {
+        await saveConfigToR2(config);
+    } catch (e) {
+        console.error('[saveRoutingSlipConfig] Failed to save config to R2:', e);
+        throw new Error('No se pudo guardar en R2. Verifique las credenciales del bucket.');
+    }
+
     return config;
 }
 
