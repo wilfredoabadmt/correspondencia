@@ -236,12 +236,18 @@ export async function serveTemplateFile(
     id: string,
     organizationId: string
 ): Promise<{ buffer: number[]; fileName: string } | null> {
-    const template = TEMPLATE_STORE.find(t => t.id === id);
-    if (!template || !template.fileKey) return null;
+    try {
+        const template = TEMPLATE_STORE.find(t => t.id === id);
+        if (!template || !template.fileKey) return null;
 
-    const storage = getStorageService();
-    if (!storage || !template.fileKey) return null;
+        const storage = getStorageService();
+        if (!storage || !template.fileKey) return null;
 
-    const buf = await storage.getFileBuffer(template.fileKey);
-    return { buffer: Array.from(buf), fileName: template.fileName };
+        const buf = await storage.getFileBuffer(template.fileKey);
+        return { buffer: Array.from(buf), fileName: template.fileName };
+    } catch (err) {
+        console.error('[serveTemplateFile] Storage error, falling back to generator:', err);
+        return null;
+    }
 }
+
