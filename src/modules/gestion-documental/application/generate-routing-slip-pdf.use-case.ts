@@ -28,7 +28,10 @@ export class GenerateRoutingSlipPdfUseCase {
             doc = null;
         }
 
-        if (!doc && !documentId.includes('sample') && !documentId.includes('tpl')) {
+        if (!doc && 
+            !documentId.includes('sample') && 
+            !documentId.includes('tpl') &&
+            !documentId.startsWith('doc-gen-')) {
             throw new Error('Documento no encontrado o no tiene autorización para acceder.');
         }
 
