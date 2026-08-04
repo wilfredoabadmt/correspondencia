@@ -41,13 +41,6 @@ export default function TemplatesManagementPage() {
     const [editVersion, setEditVersion] = useState('');
     const [editType, setEditType] = useState<'INF' | 'NOT' | 'CAR' | 'MEM' | 'CIR' | 'INS'>('INF');
 
-    // Edit modal state
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editingTemplate, setEditingTemplate] = useState<DocumentTemplateModel | null>(null);
-    const [editTitle, setEditTitle] = useState('');
-    const [editVersion, setEditVersion] = useState('');
-    const [editType, setEditType] = useState<'INF' | 'NOT' | 'CAR' | 'MEM' | 'CIR' | 'INS'>('INF');
-
     const loadTemplates = async () => {
         try {
             setLoading(true);
