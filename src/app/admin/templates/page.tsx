@@ -41,6 +41,14 @@ export default function TemplatesManagementPage() {
     const [editVersion, setEditVersion] = useState('');
     const [editType, setEditType] = useState<'INF' | 'NOT' | 'CAR' | 'MEM' | 'CIR' | 'INS'>('INF');
 
+    const openEditModal = (template: DocumentTemplateModel) => {
+        setEditingTemplate(template);
+        setEditTitle(template.title);
+        setEditVersion(template.version);
+        setEditType(template.type);
+        setIsEditModalOpen(true);
+    };
+
     const loadTemplates = async () => {
         try {
             setLoading(true);
