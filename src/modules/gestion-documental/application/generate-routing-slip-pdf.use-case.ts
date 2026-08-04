@@ -3,6 +3,10 @@ import { InjectionTokens } from '~/core/injection-tokens';
 import type { IDocumentRepository } from '../core/document.repository';
 import type { IDocumentHistoryRepository } from '../core/document-history.repository';
 import type { IPdfGeneratorService } from '../core/pdf-generator.service';
+import type { IStorageService } from '~/modules/storage/core/storage.service';
+import type { RoutingSlipConfigData } from '../core/pdf-generator.service';
+
+const CONFIG_KEY = 'routing-slip/config.json';
 
 export interface GenerateRoutingSlipPdfDTO {
     documentId: string;
@@ -17,8 +21,38 @@ export class GenerateRoutingSlipPdfUseCase {
         @inject(InjectionTokens.DocumentHistoryRepository)
         private readonly historyRepository: IDocumentHistoryRepository,
         @inject(InjectionTokens.PdfGeneratorService)
-        private readonly pdfGeneratorService: IPdfGeneratorService
+        private readonly pdfGeneratorService: IPdfGeneratorService,
+        @inject(InjectionTokens.StorageService)
+        private readonly storageService: IStorageService
     ) {}
+
+    private async loadConfig(): Promise<RoutingSlipConfigData> {
+        try {
+            const buf = await this.storageService.getFileBuffer(CONFIG_KEY);
+            const raw = JSON.parse(buf.toString('utf-8'));
+
+            let logoBuffer: Buffer | null = null;
+            if (raw.logoKey) {
+                try {
+                    logoBuffer = await this.storageService.getFileBuffer(raw.logoKey);
+                } catch {
+                    logoBuffer = null;
+                }
+            }
+
+            return {
+                institutionName: raw.institutionName || 'AGENCIA ESTATAL DE VIVIENDA',
+                subTitle: raw.subTitle || 'ESTADO PLURINACIONAL DE BOLIVIA',
+                headerColor: raw.headerColor,
+                logoBuffer,
+            };
+        } catch {
+            return {
+                institutionName: 'AGENCIA ESTATAL DE VIVIENDA',
+                subTitle: 'ESTADO PLURINACIONAL DE BOLIVIA',
+            };
+        }
+    }
 
     async execute({ documentId, organizationId }: GenerateRoutingSlipPdfDTO): Promise<{ buffer: Buffer; fileName: string }> {
         let doc = null;
@@ -89,12 +123,14 @@ export class GenerateRoutingSlipPdfUseCase {
             isUrgent: false,
         }));
 
+        const config = await this.loadConfig();
+
         const buffer = await this.pdfGeneratorService.generateRoutingSlipPdf({
             routingSlipCode: effectiveDoc.trackingId || effectiveDoc.trackingCode || 'E-2026-00558',
             citeCode: effectiveDoc.trackingCode || effectiveDoc.trackingId || 'AEV/DNP/INF/Nro.0028/2026',
             dateStr: createdDate.toLocaleDateString('es-PE'),
             timeStr: createdDate.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
-            procedencia: 'AGENCIA ESTATAL DE VIVIENDA',
+            procedencia: config.institutionName,
             remitente: effectiveDoc.sender || 'Remitente',
             destinatario: effectiveDoc.destinationAreaName || 'Destinatario Principal',
             referencia: effectiveDoc.subject || 'Sin Asunto',
@@ -102,6 +138,7 @@ export class GenerateRoutingSlipPdfUseCase {
             adjunto: 'Documento Digitalizado PDF',
             hojas: 1,
             proveidos,
+            config,
         });
 
         const cleanCode = (effectiveDoc.trackingId || effectiveDoc.trackingCode || 'HojaDeRuta').replace(/\//g, '_');

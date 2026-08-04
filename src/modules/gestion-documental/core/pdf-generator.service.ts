@@ -9,6 +9,13 @@ export interface RoutingSlipHistoryItem {
     isUrgent: boolean;
 }
 
+export interface RoutingSlipConfigData {
+    institutionName: string;
+    subTitle: string;
+    headerColor?: string;
+    logoBuffer?: Buffer | null;
+}
+
 export interface RoutingSlipPdfParams {
     routingSlipCode: string;
     citeCode: string;
@@ -22,6 +29,7 @@ export interface RoutingSlipPdfParams {
     adjunto: string;
     hojas: number;
     proveidos: RoutingSlipHistoryItem[];
+    config?: RoutingSlipConfigData;
 }
 
 export interface IPdfGeneratorService {

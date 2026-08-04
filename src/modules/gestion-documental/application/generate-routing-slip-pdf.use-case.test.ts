@@ -4,6 +4,7 @@ import { GenerateRoutingSlipPdfUseCase } from './generate-routing-slip-pdf.use-c
 import type { IDocumentRepository, DocumentWithArea } from '../core/document.repository';
 import type { IDocumentHistoryRepository } from '../core/document-history.repository';
 import type { IPdfGeneratorService } from '../core/pdf-generator.service';
+import type { IStorageService } from '~/modules/storage/core/storage.service';
 
 class MockDocumentRepository implements IDocumentRepository {
     create = vi.fn();
@@ -28,17 +29,26 @@ class MockPdfGeneratorService implements IPdfGeneratorService {
     generateRoutingSlipPdf = vi.fn();
 }
 
+class MockStorageService implements IStorageService {
+    getDownloadUrl = vi.fn();
+    uploadFile = vi.fn();
+    getFileBuffer = vi.fn();
+}
+
 describe('GenerateRoutingSlipPdfUseCase', () => {
     let useCase: GenerateRoutingSlipPdfUseCase;
     let mockDocRepo: MockDocumentRepository;
     let mockHistRepo: MockHistoryRepository;
     let mockPdfService: MockPdfGeneratorService;
+    let mockStorageService: MockStorageService;
 
     beforeEach(() => {
         mockDocRepo = new MockDocumentRepository();
         mockHistRepo = new MockHistoryRepository();
         mockPdfService = new MockPdfGeneratorService();
-        useCase = new GenerateRoutingSlipPdfUseCase(mockDocRepo, mockHistRepo, mockPdfService);
+        mockStorageService = new MockStorageService();
+        mockStorageService.getFileBuffer.mockRejectedValue(new Error('not found'));
+        useCase = new GenerateRoutingSlipPdfUseCase(mockDocRepo, mockHistRepo, mockPdfService, mockStorageService);
     });
 
     const mockDoc: DocumentWithArea = {

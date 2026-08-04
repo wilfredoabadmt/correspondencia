@@ -2,12 +2,17 @@
 
 import { auth } from '~/modules/auth/lib/auth';
 import { redirect } from 'next/navigation';
+import { container, InjectionTokens } from '~/core/container';
+import type { IStorageService } from '~/modules/storage/core/storage.service';
+
+const CONFIG_KEY = 'routing-slip/config.json';
+const LOGO_KEY = 'routing-slip/logo';
 
 export interface RoutingSlipConfig {
     institutionName: string;
     subTitle: string;
     headerColor: string;
-    logoUrl?: string | null;
+    logoKey?: string | null;
     citeFormats: {
         INF: string;
         NOT: string;
@@ -19,11 +24,11 @@ export interface RoutingSlipConfig {
     updatedAt?: string;
 }
 
-let ROUTING_SLIP_CONFIG_STORE: RoutingSlipConfig = {
+const DEFAULT_CONFIG: RoutingSlipConfig = {
     institutionName: 'AGENCIA ESTATAL DE VIVIENDA - AEVIVIENDA',
     subTitle: 'MINISTERIO DE OBRAS PÚBLICAS, SERVICIOS Y VIVIENDA',
     headerColor: '#0f172a',
-    logoUrl: null,
+    logoKey: null,
     citeFormats: {
         INF: 'AEV/DNP/INF/Nro.{SEQ}-{YEAR}',
         NOT: 'AEV/DNP/NOT/Nro.{SEQ}-{YEAR}',
@@ -34,6 +39,10 @@ let ROUTING_SLIP_CONFIG_STORE: RoutingSlipConfig = {
     },
     updatedAt: new Date().toISOString(),
 };
+
+function getStorageService(): IStorageService {
+    return container.resolve<IStorageService>(InjectionTokens.StorageService);
+}
 
 async function checkAdminAuth() {
     const session = await auth();
@@ -47,35 +56,59 @@ async function checkAdminAuth() {
     return session.user;
 }
 
+async function loadConfigFromR2(): Promise<RoutingSlipConfig> {
+    try {
+        const buf = await getStorageService().getFileBuffer(CONFIG_KEY);
+        return JSON.parse(buf.toString('utf-8'));
+    } catch {
+        return DEFAULT_CONFIG;
+    }
+}
+
+async function saveConfigToR2(config: RoutingSlipConfig): Promise<void> {
+    const body = Buffer.from(JSON.stringify(config, null, 2), 'utf-8');
+    await getStorageService().uploadFile(CONFIG_KEY, body, 'application/json');
+}
+
 export async function getRoutingSlipConfig(): Promise<RoutingSlipConfig> {
     await checkAdminAuth();
-    return ROUTING_SLIP_CONFIG_STORE;
+    return loadConfigFromR2();
+}
+
+export async function getRoutingSlipConfigPublic(): Promise<RoutingSlipConfig> {
+    return loadConfigFromR2();
 }
 
 export async function saveRoutingSlipConfig(formData: FormData): Promise<RoutingSlipConfig> {
     await checkAdminAuth();
 
-    const institutionName = formData.get('institutionName') as string || ROUTING_SLIP_CONFIG_STORE.institutionName;
-    const subTitle = formData.get('subTitle') as string || ROUTING_SLIP_CONFIG_STORE.subTitle;
-    
-    const citeInf = formData.get('citeInf') as string || ROUTING_SLIP_CONFIG_STORE.citeFormats.INF;
-    const citeNot = formData.get('citeNot') as string || ROUTING_SLIP_CONFIG_STORE.citeFormats.NOT;
-    const citeCar = formData.get('citeCar') as string || ROUTING_SLIP_CONFIG_STORE.citeFormats.CAR;
-    const citeMem = formData.get('citeMem') as string || ROUTING_SLIP_CONFIG_STORE.citeFormats.MEM;
-    const citeCir = formData.get('citeCir') as string || ROUTING_SLIP_CONFIG_STORE.citeFormats.CIR;
-    const citeIns = formData.get('citeIns') as string || ROUTING_SLIP_CONFIG_STORE.citeFormats.INS;
+    const current = await loadConfigFromR2();
 
+    const institutionName = formData.get('institutionName') as string || current.institutionName;
+    const subTitle = formData.get('subTitle') as string || current.subTitle;
+
+    const citeInf = formData.get('citeInf') as string || current.citeFormats.INF;
+    const citeNot = formData.get('citeNot') as string || current.citeFormats.NOT;
+    const citeCar = formData.get('citeCar') as string || current.citeFormats.CAR;
+    const citeMem = formData.get('citeMem') as string || current.citeFormats.MEM;
+    const citeCir = formData.get('citeCir') as string || current.citeFormats.CIR;
+    const citeIns = formData.get('citeIns') as string || current.citeFormats.INS;
+
+    // Upload logo to R2 if provided
+    let logoKey = current.logoKey;
     const logoFile = formData.get('logoFile') as File | null;
-    let logoUrl = ROUTING_SLIP_CONFIG_STORE.logoUrl;
     if (logoFile && logoFile.size > 0) {
-        logoUrl = `data:image/png;base64,demo_logo_${Date.now()}`;
+        const buffer = Buffer.from(await logoFile.arrayBuffer());
+        const ext = logoFile.name.split('.').pop() || 'png';
+        logoKey = `${LOGO_KEY}.${ext}`;
+        await getStorageService().uploadFile(logoKey, buffer, logoFile.type || 'image/png');
     }
 
-    ROUTING_SLIP_CONFIG_STORE = {
+    const config: RoutingSlipConfig = {
         institutionName,
         subTitle,
         headerColor: '#0f172a',
-        logoUrl,
+        logoKey,
         citeFormats: {
             INF: citeInf,
             NOT: citeNot,
@@ -87,5 +120,12 @@ export async function saveRoutingSlipConfig(formData: FormData): Promise<Routing
         updatedAt: new Date().toISOString(),
     };
 
-    return ROUTING_SLIP_CONFIG_STORE;
+    await saveConfigToR2(config);
+    return config;
+}
+
+export async function getRoutingSlipLogoUrl(): Promise<string | null> {
+    const config = await loadConfigFromR2();
+    if (!config.logoKey) return null;
+    return getStorageService().getDownloadUrl(config.logoKey);
 }
