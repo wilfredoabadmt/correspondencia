@@ -69,11 +69,15 @@ export default function RoutingSlipConfigPage() {
                 formData.append('logoFile', selectedLogo);
             }
 
-            const updated = await saveRoutingSlipConfig(formData);
-            setConfig(updated);
-            setMessage('¡Configuración institucional de Hoja de Ruta guardada con éxito!');
+            const res = await saveRoutingSlipConfig(formData);
+            if (res.success && res.config) {
+                setConfig(res.config);
+                setMessage('¡Configuración institucional de Hoja de Ruta guardada con éxito!');
+            } else {
+                setMessage(`Error al guardar: ${res.error || 'Ocurrió un error inesperado'}`);
+            }
         } catch (err: any) {
-            setMessage(`Error al guardar: ${err.message}`);
+            setMessage(`Error al guardar: ${err.message || 'Error de conexión'}`);
         } finally {
             setSubmitting(false);
         }

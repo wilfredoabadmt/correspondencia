@@ -88,62 +88,61 @@ export async function getRoutingSlipConfigPublic(): Promise<RoutingSlipConfig> {
     return loadConfigFromR2();
 }
 
-export async function saveRoutingSlipConfig(formData: FormData): Promise<RoutingSlipConfig> {
-    await checkAdminAuth();
-
-    const current = await loadConfigFromR2();
-
-    const institutionName = formData.get('institutionName') as string || current.institutionName;
-    const subTitle = formData.get('subTitle') as string || current.subTitle;
-
-    const citeInf = formData.get('citeInf') as string || current.citeFormats.INF;
-    const citeNot = formData.get('citeNot') as string || current.citeFormats.NOT;
-    const citeCar = formData.get('citeCar') as string || current.citeFormats.CAR;
-    const citeMem = formData.get('citeMem') as string || current.citeFormats.MEM;
-    const citeCir = formData.get('citeCir') as string || current.citeFormats.CIR;
-    const citeIns = formData.get('citeIns') as string || current.citeFormats.INS;
-
-    // Upload logo to R2 if provided
-    let logoKey = current.logoKey;
-    const logoFile = formData.get('logoFile') as File | null;
-    if (logoFile && logoFile.size > 0) {
-        try {
-            const storage = getStorageService();
-            if (storage) {
-                const buffer = Buffer.from(await logoFile.arrayBuffer());
-                const ext = logoFile.name.split('.').pop() || 'png';
-                logoKey = `${LOGO_KEY}.${ext}`;
-                await storage.uploadFile(logoKey, buffer, logoFile.type || 'image/png');
-            }
-        } catch (e) {
-            console.error('[saveRoutingSlipConfig] Failed to upload logo to R2:', e);
-        }
-    }
-
-    const config: RoutingSlipConfig = {
-        institutionName,
-        subTitle,
-        headerColor: '#0f172a',
-        logoKey,
-        citeFormats: {
-            INF: citeInf,
-            NOT: citeNot,
-            CAR: citeCar,
-            MEM: citeMem,
-            CIR: citeCir,
-            INS: citeIns,
-        },
-        updatedAt: new Date().toISOString(),
-    };
-
+export async function saveRoutingSlipConfig(formData: FormData): Promise<{ success: boolean; config?: RoutingSlipConfig; error?: string }> {
     try {
-        await saveConfigToR2(config);
-    } catch (e) {
-        console.error('[saveRoutingSlipConfig] Failed to save config to R2:', e);
-        throw new Error('No se pudo guardar en R2. Verifique las credenciales del bucket.');
-    }
+        await checkAdminAuth();
 
-    return config;
+        const current = await loadConfigFromR2();
+
+        const institutionName = formData.get('institutionName') as string || current.institutionName;
+        const subTitle = formData.get('subTitle') as string || current.subTitle;
+
+        const citeInf = formData.get('citeInf') as string || current.citeFormats.INF;
+        const citeNot = formData.get('citeNot') as string || current.citeFormats.NOT;
+        const citeCar = formData.get('citeCar') as string || current.citeFormats.CAR;
+        const citeMem = formData.get('citeMem') as string || current.citeFormats.MEM;
+        const citeCir = formData.get('citeCir') as string || current.citeFormats.CIR;
+        const citeIns = formData.get('citeIns') as string || current.citeFormats.INS;
+
+        // Upload logo to R2 if provided
+        let logoKey = current.logoKey;
+        const logoFile = formData.get('logoFile') as File | null;
+        if (logoFile && logoFile.size > 0) {
+            try {
+                const storage = getStorageService();
+                if (storage) {
+                    const buffer = Buffer.from(await logoFile.arrayBuffer());
+                    const ext = logoFile.name.split('.').pop() || 'png';
+                    logoKey = `${LOGO_KEY}.${ext}`;
+                    await storage.uploadFile(logoKey, buffer, logoFile.type || 'image/png');
+                }
+            } catch (e) {
+                console.error('[saveRoutingSlipConfig] Failed to upload logo to R2:', e);
+            }
+        }
+
+        const config: RoutingSlipConfig = {
+            institutionName,
+            subTitle,
+            headerColor: '#0f172a',
+            logoKey,
+            citeFormats: {
+                INF: citeInf,
+                NOT: citeNot,
+                CAR: citeCar,
+                MEM: citeMem,
+                CIR: citeCir,
+                INS: citeIns,
+            },
+            updatedAt: new Date().toISOString(),
+        };
+
+        await saveConfigToR2(config);
+        return { success: true, config };
+    } catch (e: any) {
+        console.error('[saveRoutingSlipConfig] Failed to save config:', e);
+        return { success: false, error: e.message || 'No se pudo guardar la configuración institucional.' };
+    }
 }
 
 export async function getRoutingSlipLogoUrl(): Promise<string | null> {
