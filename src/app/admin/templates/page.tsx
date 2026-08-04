@@ -298,6 +298,7 @@ export default function TemplatesManagementPage() {
                                         <div className="flex items-center gap-2">
                                             <a
                                                 href={`/api/documents/${template.id}/template`}
+                                                download={template.fileName.endsWith('.docx') ? template.fileName : `${template.fileName}.docx`}
                                                 className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 text-xs font-bold text-center transition-colors flex items-center justify-center gap-1"
                                                 title="Descargar o previsualizar la plantilla Word"
                                             >

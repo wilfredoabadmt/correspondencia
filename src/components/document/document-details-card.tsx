@@ -49,12 +49,13 @@ export function DocumentDetailsCard({ document }: DocumentDetailsCardProps) {
                         Imprimir Hoja de Ruta (PDF)
                     </button>
                 </a>
-                <a href={`/api/documents/${document.id}/template`} download>
+                <a href={`/api/documents/${document.id}/template`} download={`Plantilla_${(document as any).trackingCode ? (document as any).trackingCode.replace(/\//g, '_') : document.id}.docx`}>
                     <button className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none h-9 px-4 py-2 border border-slate-300 dark:border-slate-700 bg-background hover:bg-muted">
                         Descargar Plantilla (.docx)
                     </button>
                 </a>
             </div>
         </Card>
+
     );
 }

@@ -68,10 +68,15 @@ describe('GenerateDocxTemplateUseCase', () => {
         expect(mockDocxService.generateTemplate).toHaveBeenCalled();
     });
 
-    it('debe lanzar un error si el documento no existe', async () => {
+    it('debe generar una plantilla con datos por defecto si el documento no se encuentra en BD', async () => {
         mockRepo.findDetailsById.mockResolvedValue(null);
+        mockDocxService.generateTemplate.mockResolvedValue(Buffer.from('fake-docx-content'));
 
-        await expect(useCase.execute({ documentId: 'doc-invalid', organizationId: 'org-1' }))
-            .rejects.toThrow('Documento no encontrado o no tiene autorización para acceder.');
+        const result = await useCase.execute({ documentId: 'doc-invalid', organizationId: 'org-1' });
+
+        expect(result.fileName).toContain('DOC-doc-inva.docx');
+        expect(result.buffer).toBeDefined();
+        expect(mockDocxService.generateTemplate).toHaveBeenCalled();
     });
 });
+

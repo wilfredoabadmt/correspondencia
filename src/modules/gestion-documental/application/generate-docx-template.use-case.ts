@@ -25,27 +25,35 @@ export class GenerateDocxTemplateUseCase {
             doc = null;
         }
 
-        if (!doc && !documentId.includes('sample') && !documentId.includes('tpl')) {
-            throw new Error('Documento no encontrado o no tiene autorización para acceder.');
-        }
+        const effectiveDoc = doc || {
+            id: documentId,
+            trackingCode: documentId.includes('sample') ? 'AEV/DNP/INF/Nro.0028/2026' : `DOC-${documentId.substring(0, 8)}`,
+            trackingId: `E-2026-${documentId.substring(0, 5)}`,
+            subject: 'INFORME DE EVALUACIÓN Y GESTIÓN DE CORRESPONDENCIA SIGEC',
+            sender: 'Edwin Yujra (Jefe TIC)',
+            documentType: 'Informe',
+            destinationAreaName: 'Juan José Espejo (Director General)',
+            createdAt: new Date(),
+        };
 
-        const citeCode = doc?.trackingCode || doc?.trackingId || (documentId.includes('sample') ? 'AEV_DNP_INF_Nro.0028-2026' : `DOC-${documentId.substring(0, 8)}`);
-        const dateStr = doc?.createdAt 
-            ? new Date(doc.createdAt).toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })
+        const citeCode = effectiveDoc.trackingCode || effectiveDoc.trackingId || `DOC-${documentId.substring(0, 8)}`;
+        const dateStr = effectiveDoc.createdAt 
+            ? new Date(effectiveDoc.createdAt).toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })
             : new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
 
         const buffer = await this.docxGeneratorService.generateTemplate({
             citeCode,
             dateStr,
-            recipientName: doc?.destinationAreaName || 'Juan José Espejo (Director General)',
+            recipientName: effectiveDoc.destinationAreaName || 'Juan José Espejo (Director General)',
             recipientRole: 'Director General Ejecutivo',
-            senderName: doc?.sender || 'Edwin Yujra (Jefe TIC)',
+            senderName: effectiveDoc.sender || 'Edwin Yujra (Jefe TIC)',
             senderRole: 'Servidor Público Responsable',
-            subject: doc?.subject || 'INFORME DE EVALUACIÓN Y GESTIÓN DE CORRESPONDENCIA SIGEC',
-            documentType: doc?.documentType || 'Informe',
+            subject: effectiveDoc.subject || 'INFORME DE EVALUACIÓN Y GESTIÓN DE CORRESPONDENCIA SIGEC',
+            documentType: effectiveDoc.documentType || 'Informe',
         });
 
         const cleanCode = citeCode.replace(/\//g, '_');
         return { buffer, fileName: `${cleanCode}.docx` };
     }
 }
+

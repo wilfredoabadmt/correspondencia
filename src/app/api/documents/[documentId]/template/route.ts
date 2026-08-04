@@ -18,11 +18,12 @@ export async function GET(
         // First, try to serve a stored template file from the admin template store
         const stored = await serveTemplateFile(params.documentId, session.user.organizationId);
         if (stored) {
+            const cleanFileName = stored.fileName.endsWith('.docx') ? stored.fileName : `${stored.fileName}.docx`;
             return new NextResponse(new Uint8Array(stored.buffer), {
                 status: 200,
                 headers: {
                     'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                    'Content-Disposition': `attachment; filename="${stored.fileName}"`,
+                    'Content-Disposition': `attachment; filename="${cleanFileName}"; filename*=UTF-8''${encodeURIComponent(cleanFileName)}`,
                 },
             });
         }
@@ -37,14 +38,18 @@ export async function GET(
             organizationId: session.user.organizationId,
         });
 
+        const cleanFileName = fileName.endsWith('.docx') ? fileName : `${fileName}.docx`;
+
         return new NextResponse(new Uint8Array(buffer), {
             status: 200,
             headers: {
                 'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'Content-Disposition': `attachment; filename="${fileName}"`,
+                'Content-Disposition': `attachment; filename="${cleanFileName}"; filename*=UTF-8''${encodeURIComponent(cleanFileName)}`,
             },
         });
     } catch (err: any) {
+        console.error('[template route error]:', err);
         return new NextResponse(err.message || 'Error al generar la plantilla', { status: 400 });
     }
 }
+

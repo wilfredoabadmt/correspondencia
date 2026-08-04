@@ -272,6 +272,7 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
                                             </Link>
                                             <a
                                                 href={`/api/documents/${doc.id}/template`}
+                                                download={`Plantilla_${doc.trackingCode ? doc.trackingCode.replace(/\//g, '_') : doc.id}.docx`}
                                                 className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-[11px] border border-slate-700 transition-all inline-block"
                                             >
                                                 Word 📥
