@@ -12,7 +12,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Environment variables at build time
+# Environment variables at build time (only needed for build)
 ARG DATABASE_URL
 ARG R2_ACCOUNT_ID
 ARG R2_ACCESS_KEY_ID
@@ -35,6 +35,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Enable pnpm in production stage
+RUN corepack enable pnpm
+
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
@@ -51,4 +54,10 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["pnpm", "run", "start"]
+# IMPORTANT: Only run next start at runtime.
+# Run migrations separately using: pnpm run db:migrate
+# Use entrypoint for better control
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
