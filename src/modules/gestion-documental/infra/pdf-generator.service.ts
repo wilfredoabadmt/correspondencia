@@ -134,6 +134,35 @@ export class PdfGeneratorService implements IPdfGeneratorService {
                 doc.fillColor('#64748b').font('Helvetica').fontSize(7).text('Hora: _______________', startX + 360, currentY + 120);
             });
 
+            // QR Code & Verification Footer
+            const footerY = 720;
+            doc.strokeColor('#e2e8f0').lineWidth(0.5).moveTo(startX, footerY).lineTo(startX + pageWidth, footerY).stroke();
+
+            if (params.qrBuffer) {
+                try {
+                    doc.image(params.qrBuffer, startX, footerY + 5, { fit: [45, 45] });
+                } catch {
+                    doc.rect(startX, footerY + 5, 45, 45).strokeColor('#94a3b8').stroke();
+                }
+            }
+
+            const qrTextX = params.qrBuffer ? startX + 55 : startX;
+            doc.fillColor('#0f172a').font('Helvetica-Bold').fontSize(7).text(
+                `VERIFICACIÓN DE AUTENTICIDAD E INTEGRIDAD DIGITAL`,
+                qrTextX,
+                footerY + 8
+            );
+            doc.fillColor('#475569').font('Helvetica').fontSize(7).text(
+                `Código de Verificación: ${params.verificationCode || 'VERIF-QR-SIGEC'} | Escanee el QR para validar este documento`,
+                qrTextX,
+                footerY + 18
+            );
+            doc.fillColor('#94a3b8').font('Helvetica').fontSize(6).text(
+                `Documento oficial generado por GestorDoc. Documento firmado digitalmente acorde a normativa vigente.`,
+                qrTextX,
+                footerY + 28
+            );
+
             doc.end();
         });
     }

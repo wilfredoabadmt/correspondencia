@@ -15,6 +15,8 @@ import { JustifyDelayUseCase } from '~/modules/gestion-documental/application/ju
 import { GroupDocumentsUseCase } from '~/modules/gestion-documental/application/group-documents.use-case';
 import { ArchiveDocumentUseCase } from '~/modules/gestion-documental/application/archive-document.use-case';
 import { UnarchiveDocumentUseCase } from '~/modules/gestion-documental/application/unarchive-document.use-case';
+import { SignDocumentUseCase } from '~/modules/gestion-documental/application/sign-document.use-case';
+import { VerifyDocumentUseCase } from '~/modules/gestion-documental/application/verify-document.use-case';
 import { GenerateDocxTemplateUseCase } from '~/modules/gestion-documental/application/generate-docx-template.use-case';
 import { GenerateRoutingSlipPdfUseCase } from '~/modules/gestion-documental/application/generate-routing-slip-pdf.use-case';
 import { GenerateReportUseCase } from '~/modules/gestion-documental/application/generate-report.use-case';
@@ -114,6 +116,12 @@ container.register(InjectionTokens.ArchiveDocumentUseCase, {
 });
 container.register(InjectionTokens.UnarchiveDocumentUseCase, {
     useClass: UnarchiveDocumentUseCase,
+});
+container.register(InjectionTokens.SignDocumentUseCase, {
+    useClass: SignDocumentUseCase,
+});
+container.register(InjectionTokens.VerifyDocumentUseCase, {
+    useClass: VerifyDocumentUseCase,
 });
 
 // Register Expediente Dependencies

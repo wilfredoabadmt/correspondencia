@@ -56,4 +56,16 @@ export interface IDocumentRepository {
     archiveDocument(params: { documentId: string; folderCategory: string; observations: string | null; organizationId: string }): Promise<void>;
 
     unarchiveDocument(params: { documentId: string; organizationId: string }): Promise<void>;
+
+    signDocument(params: {
+        documentId: string;
+        signedByUserId: string;
+        signatureHash: string;
+        verificationCode: string;
+        organizationId: string;
+    }): Promise<Document>;
+
+    findByVerificationCode(params: {
+        verificationCode: string;
+    }): Promise<(DocumentWithArea & { signedByUserName: string | null; organizationName: string | null }) | null>;
 }

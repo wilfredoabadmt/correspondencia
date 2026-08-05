@@ -15,6 +15,8 @@ class MockDocumentRepository implements IDocumentRepository {
     groupDocuments = vi.fn();
     archiveDocument = vi.fn();
     unarchiveDocument = vi.fn();
+    signDocument = vi.fn();
+    findByVerificationCode = vi.fn();
 }
 
 describe('CancelDerivationUseCase', () => {

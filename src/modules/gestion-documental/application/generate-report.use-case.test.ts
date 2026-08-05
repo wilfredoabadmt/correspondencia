@@ -15,6 +15,8 @@ class MockDocumentRepository implements IDocumentRepository {
     groupDocuments = vi.fn();
     archiveDocument = vi.fn();
     unarchiveDocument = vi.fn();
+    signDocument = vi.fn();
+    findByVerificationCode = vi.fn();
 }
 
 describe('GenerateReportUseCase', () => {
@@ -46,6 +48,11 @@ describe('GenerateReportUseCase', () => {
             fileKey: null,
             downloadUrl: null,
             expedienteId: null,
+            isSigned: false,
+            signedAt: null,
+            signedByUserId: null,
+            signatureHash: null,
+            verificationCode: null,
             createdAt: new Date(),
             updatedAt: new Date(),
         },

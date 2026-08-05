@@ -150,12 +150,18 @@ export const documents = pgTable('documents', {
     fileKey: text('file_key'),
     downloadUrl: text('download_url'),
     expedienteId: text('expediente_id'),
+    isSigned: boolean('is_signed').default(false),
+    signedAt: timestamp('signed_at'),
+    signedByUserId: text('signed_by_user_id'),
+    signatureHash: text('signature_hash'),
+    verificationCode: text('verification_code'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => {
     return {
         organizationIdIdx: index('idx_documents_organization_id').on(table.organizationId),
         trackingIdIdx: index('idx_documents_tracking_id').on(table.trackingId),
+        verificationCodeUniqueIdx: uniqueIndex('idx_documents_verification_code').on(table.verificationCode),
         destinationAreaFk: foreignKey({
             columns: [table.destinationAreaId],
             foreignColumns: [areaHierarchy.id],
@@ -172,6 +178,10 @@ export const documents = pgTable('documents', {
         expedienteFk: foreignKey({
             columns: [table.expedienteId],
             foreignColumns: [expedientes.id],
+        }).onDelete('set null'),
+        signedByUserFk: foreignKey({
+            columns: [table.signedByUserId],
+            foreignColumns: [users.id],
         }).onDelete('set null'),
     };
 });

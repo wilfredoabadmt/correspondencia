@@ -23,6 +23,11 @@ describe('DocumentDetailsCard', () => {
         groupedIntoDocumentId: null,
         folderCategory: null,
         archiveObservations: null,
+        isSigned: false,
+        signedAt: null,
+        signedByUserId: null,
+        signatureHash: null,
+        verificationCode: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };

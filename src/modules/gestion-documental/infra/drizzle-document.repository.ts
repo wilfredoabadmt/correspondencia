@@ -289,6 +289,89 @@ export class DrizzleDocumentRepository implements IDocumentRepository {
         });
     }
 
+    async signDocument({
+        documentId,
+        signedByUserId,
+        signatureHash,
+        verificationCode,
+        organizationId,
+    }: {
+        documentId: string;
+        signedByUserId: string;
+        signatureHash: string;
+        verificationCode: string;
+        organizationId: string;
+    }): Promise<Document> {
+        return await this.db.transaction(async (tx) => {
+            const [doc] = await tx
+                .select()
+                .from(schema.documents)
+                .where(and(eq(schema.documents.id, documentId), eq(schema.documents.organizationId, organizationId)));
+
+            if (!doc) throw new Error('Documento no encontrado o sin acceso.');
+
+            const now = new Date();
+            const [updatedDoc] = await tx
+                .update(schema.documents)
+                .set({
+                    isSigned: true,
+                    signedAt: now,
+                    signedByUserId,
+                    signatureHash,
+                    verificationCode,
+                    updatedAt: now,
+                })
+                .where(eq(schema.documents.id, documentId))
+                .returning();
+
+            await tx.insert(schema.documentHistory).values({
+                documentId,
+                toAreaId: doc.destinationAreaId ?? '',
+                userId: signedByUserId,
+                action: 'FIRMAR_DIGITALMENTE',
+                comment: `Documento firmado digitalmente. Código de verificación: ${verificationCode}`,
+            });
+
+            return updatedDoc;
+        });
+    }
+
+    async findByVerificationCode({
+        verificationCode,
+    }: {
+        verificationCode: string;
+    }): Promise<(DocumentWithArea & { signedByUserName: string | null; organizationName: string | null }) | null> {
+        const documentColumns = getTableColumns(schema.documents);
+        const result = await this.db
+            .select({
+                ...documentColumns,
+                destinationAreaName: schema.areaHierarchy.name,
+                signedByUserName: schema.users.name,
+                organizationName: schema.organizations.name,
+            })
+            .from(schema.documents)
+            .leftJoin(
+                schema.areaHierarchy,
+                eq(schema.documents.destinationAreaId, schema.areaHierarchy.id)
+            )
+            .leftJoin(
+                schema.users,
+                eq(schema.documents.signedByUserId, schema.users.id)
+            )
+            .leftJoin(
+                schema.organizations,
+                eq(schema.documents.organizationId, schema.organizations.id)
+            )
+            .where(eq(schema.documents.verificationCode, verificationCode))
+            .limit(1);
+
+        if (result.length === 0) {
+            return null;
+        }
+
+        return result[0];
+    }
+
     // Placeholder for other methods of the interface
     async create(data: typeof schema.documents.$inferInsert): Promise<any> {
         const [newInstance] = await this.db.insert(schema.documents).values(data).returning();

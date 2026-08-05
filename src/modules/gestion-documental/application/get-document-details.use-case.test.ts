@@ -17,6 +17,8 @@ class MockDocumentRepository implements IDocumentRepository {
     groupDocuments = vi.fn();
     archiveDocument = vi.fn();
     unarchiveDocument = vi.fn();
+    signDocument = vi.fn();
+    findByVerificationCode = vi.fn();
 }
 
 class MockStorageService implements IStorageService {
@@ -56,6 +58,11 @@ describe('GetDocumentDetailsUseCase', () => {
         fileKey: 'uploads/test-file.pdf',
         downloadUrl: null,
         expedienteId: null,
+        isSigned: false,
+        signedAt: null,
+        signedByUserId: null,
+        signatureHash: null,
+        verificationCode: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };

@@ -30,6 +30,8 @@ export interface RoutingSlipPdfParams {
     hojas: number;
     proveidos: RoutingSlipHistoryItem[];
     config?: RoutingSlipConfigData;
+    verificationCode?: string | null;
+    qrBuffer?: Buffer | null;
 }
 
 export interface IPdfGeneratorService {

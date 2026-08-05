@@ -18,6 +18,8 @@ export const InjectionTokens = {
     GroupDocumentsUseCase: Symbol('IGroupDocumentsUseCase'),
     ArchiveDocumentUseCase: Symbol('IArchiveDocumentUseCase'),
     UnarchiveDocumentUseCase: Symbol('IUnarchiveDocumentUseCase'),
+    SignDocumentUseCase: Symbol('ISignDocumentUseCase'),
+    VerifyDocumentUseCase: Symbol('IVerifyDocumentUseCase'),
     DocumentHistoryRepository: Symbol('IDocumentHistoryRepository'),
     GetDocumentHistoryUseCase: Symbol('IGetDocumentHistoryUseCase'),
     // Auth & Users

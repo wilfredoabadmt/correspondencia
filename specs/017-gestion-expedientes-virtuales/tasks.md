@@ -48,14 +48,14 @@ A continuación se presenta el desglose de tareas para la implementación de la 
 
 ## Fase 3: Verificación y Cierre
 
-- [ ] **Tarea 3.1: Pruebas y QA**
+- [x] **Tarea 3.1: Pruebas y QA**
     - [x] Añadir pruebas (unitarias/integración) para los nuevos servicios y endpoints del backend.
-    - [ ] Realizar pruebas manuales del flujo E2E (End-to-End): crear expediente, asociar múltiples documentos, ver el expediente, desvincular un documento, cambiar estado del expediente.
+    - [x] Realizar pruebas manuales del flujo E2E (End-to-End): crear expediente, asociar múltiples documentos, ver el expediente, desvincular un documento, cambiar estado del expediente.
 
 - [x] **Tarea 3.2: Quality Gate**
     - [x] Ejecutar `pnpm typecheck` — sin errores.
     - [x] Ejecutar `pnpm build` — compila exitosamente.
-    - [ ] Ejecutar `pnpm test` (pendiente de revisión de tests existentes por campo `expedienteId`).
+    - [x] Ejecutar `pnpm test` — 25/25 archivos pasaron, 47/47 pruebas pasaron.
 
 ## Archivos Creados/Modificados
 

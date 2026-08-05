@@ -1,3 +1,4 @@
+import QRCode from 'qrcode';
 import { inject, injectable } from 'tsyringe';
 import { InjectionTokens } from '~/core/injection-tokens';
 import type { IDocumentRepository } from '../core/document.repository';
@@ -125,6 +126,21 @@ export class GenerateRoutingSlipPdfUseCase {
 
         const config = await this.loadConfig();
 
+        const verificationCode = (effectiveDoc as any).verificationCode || `VRF-${(effectiveDoc.id || 'DEMO').slice(0, 8).toUpperCase()}`;
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gestordoc.gob.bo';
+        const verifyUrl = `${baseUrl}/verificar/${verificationCode}`;
+
+        let qrBuffer: Buffer | null = null;
+        try {
+            qrBuffer = await QRCode.toBuffer(verifyUrl, {
+                errorCorrectionLevel: 'M',
+                margin: 1,
+                width: 100,
+            });
+        } catch {
+            qrBuffer = null;
+        }
+
         const buffer = await this.pdfGeneratorService.generateRoutingSlipPdf({
             routingSlipCode: effectiveDoc.trackingId || effectiveDoc.trackingCode || 'E-2026-00558',
             citeCode: effectiveDoc.trackingCode || effectiveDoc.trackingId || 'AEV/DNP/INF/Nro.0028/2026',
@@ -139,6 +155,8 @@ export class GenerateRoutingSlipPdfUseCase {
             hojas: 1,
             proveidos,
             config,
+            verificationCode,
+            qrBuffer,
         });
 
         const cleanCode = (effectiveDoc.trackingId || effectiveDoc.trackingCode || 'HojaDeRuta').replace(/\//g, '_');
