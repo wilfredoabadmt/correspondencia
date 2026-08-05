@@ -26,6 +26,9 @@ export const InjectionTokens = {
     GetPublicTrackingInfoUseCase: Symbol('IGetPublicTrackingInfoUseCase'),
     RegisterExternalDocumentUseCase: Symbol('IRegisterExternalDocumentUseCase'),
     GenerateReceiptPdfUseCase: Symbol('IGenerateReceiptPdfUseCase'),
+    ProveidoCatalogRepository: Symbol('IProveidoCatalogRepository'),
+    DeriveMultidestinationDocumentUseCase: Symbol('IDeriveMultidestinationDocumentUseCase'),
+    ListProveidosUseCase: Symbol('IListProveidosUseCase'),
     DocumentHistoryRepository: Symbol('IDocumentHistoryRepository'),
     GetDocumentHistoryUseCase: Symbol('IGetDocumentHistoryUseCase'),
     // Auth & Users

@@ -2,12 +2,13 @@
 
 > Este `GEMINI.md` es el **archivo de contexto persistente para Gemini CLI**. Define las reglas operativas, el stack y el flujo de trabajo para este repositorio. No es un prompt para el chat web.
 
-## 1. Feature Activa: 020-ventanilla-unica-seguimiento-publico
+## 1. Feature Activa: 021-proveidos-derivacion-multidestino
 
 - **Constitución**: `.specify/memory/constitution.md`
-- **Spec**: `specs/020-ventanilla-unica-seguimiento-publico/spec.md`
+- **Spec**: `specs/021-proveidos-derivacion-multidestino/spec.md`
 
 ## Features Previas (archivadas en `specs/`)
+- **020-ventanilla-unica-seguimiento-publico**: Ventanilla única de recepción de trámites externos, portal público de seguimiento sin sesión y emisión de comprobantes de recibo con código QR.
 - **019-gestor-cites-configurables**: Gestor de CITEs automáticos configurables con reglas de formateo dinámico por área y tipo de documento.
 - **018-firma-digital-verificacion-qr**: Firma electrónica y código QR de validación en Hoja de Ruta e impresión oficial.
 - **017-gestion-expedientes-virtuales**: Gestión de expedientes virtuales, vinculación/desvinculación de documentos y seguimiento consolidado.
@@ -29,8 +30,7 @@
 
 ## 2. Próximas Features (Propuestas SDD)
 
-- **Feature 020: Ventanilla Única y Seguimiento Público para Ciudadanos** (Activa)
-- **Feature 021: Proveídos Tipificados y Derivación Multidestino (Original/Copia)**
+- **Feature 021: Proveídos Tipificados y Derivación Multidestino (Original/Copia)** (Activa)
 
 
 ## 2. Stack y Arquitectura

@@ -43,6 +43,13 @@
       "when": 1785912387001,
       "tag": "0005_thin_valeria_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785913375274,
+      "tag": "0006_serious_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

@@ -49,6 +49,9 @@ import { ManageCiteConfigsUseCase } from '~/modules/gestion-documental/applicati
 import { GetPublicTrackingInfoUseCase } from '~/modules/gestion-documental/application/get-public-tracking-info.use-case';
 import { RegisterExternalDocumentUseCase } from '~/modules/gestion-documental/application/register-external-document.use-case';
 import { GenerateReceiptPdfUseCase } from '~/modules/gestion-documental/application/generate-receipt-pdf.use-case';
+import { DrizzleProveidoCatalogRepository } from '~/modules/gestion-documental/infra/drizzle-proveido-catalog.repository';
+import { DeriveMultidestinationDocumentUseCase } from '~/modules/gestion-documental/application/derive-multidestination-document.use-case';
+import { ListProveidosUseCase } from '~/modules/gestion-documental/application/list-proveidos.use-case';
 
 import { DrizzleUserRepository } from '~/modules/users/infra/drizzle-user.repository';
 import { CreateUserUseCase } from '~/modules/users/application/create-user.use-case';
@@ -147,6 +150,15 @@ container.register(InjectionTokens.RegisterExternalDocumentUseCase, {
 });
 container.register(InjectionTokens.GenerateReceiptPdfUseCase, {
     useClass: GenerateReceiptPdfUseCase,
+});
+container.register(InjectionTokens.ProveidoCatalogRepository, {
+    useClass: DrizzleProveidoCatalogRepository,
+});
+container.register(InjectionTokens.DeriveMultidestinationDocumentUseCase, {
+    useClass: DeriveMultidestinationDocumentUseCase,
+});
+container.register(InjectionTokens.ListProveidosUseCase, {
+    useClass: ListProveidosUseCase,
 });
 
 // Register Expediente Dependencies

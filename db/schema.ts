@@ -281,3 +281,20 @@ export const citeConfigs = pgTable('cite_configs', {
         }).onDelete('set null'),
     };
 });
+
+export const proveidoCatalog = pgTable('proveido_catalog', {
+    id: text('id').primaryKey().$defaultFn(() => createId()),
+    organizationId: text('organization_id').notNull(),
+    code: text('code').notNull(),
+    description: text('description').notNull(),
+    isActive: boolean('is_active').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        organizationIdIdx: index('idx_proveido_catalog_organization_id').on(table.organizationId),
+        organizationFk: foreignKey({
+            columns: [table.organizationId],
+            foreignColumns: [organizations.id],
+        }).onDelete('cascade'),
+    };
+});
