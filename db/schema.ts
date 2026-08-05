@@ -18,6 +18,7 @@ export const users = pgTable('users', {
     role: text('role').default('OPERADOR'),
     roleId: text('role_id'),
     hashedPassword: text('hashed_password'),
+    jobTitle: text('job_title'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => {
@@ -33,6 +34,31 @@ export const users = pgTable('users', {
             columns: [table.roleId],
             foreignColumns: [roles.id],
         }).onDelete('restrict'),
+    };
+});
+
+export const userRoles = pgTable('user_roles', {
+    id: text('id').primaryKey().$defaultFn(() => createId()),
+    userId: text('user_id').notNull(),
+    roleId: text('role_id').notNull(),
+    organizationId: text('organization_id').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        userIdIdx: index('idx_user_roles_user_id').on(table.userId),
+        userRoleUniqueIdx: uniqueIndex('idx_user_roles_user_id_role_id').on(table.userId, table.roleId),
+        userFk: foreignKey({
+            columns: [table.userId],
+            foreignColumns: [users.id],
+        }).onDelete('cascade'),
+        roleFk: foreignKey({
+            columns: [table.roleId],
+            foreignColumns: [roles.id],
+        }).onDelete('cascade'),
+        organizationFk: foreignKey({
+            columns: [table.organizationId],
+            foreignColumns: [organizations.id],
+        }).onDelete('cascade'),
     };
 });
 

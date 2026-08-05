@@ -32,6 +32,8 @@ export const InjectionTokens = {
     JacobitusService: Symbol('IJacobitusService'),
     TsaTimestampService: Symbol('ITsaTimestampService'),
     SignDocumentJacobitusUseCase: Symbol('ISignDocumentJacobitusUseCase'),
+    UserRoleAssignmentRepository: Symbol('IUserRoleAssignmentRepository'),
+    AssignUserRolesUseCase: Symbol('IAssignUserRolesUseCase'),
     DocumentHistoryRepository: Symbol('IDocumentHistoryRepository'),
     GetDocumentHistoryUseCase: Symbol('IGetDocumentHistoryUseCase'),
     // Auth & Users

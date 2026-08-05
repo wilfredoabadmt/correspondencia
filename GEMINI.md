@@ -2,12 +2,13 @@
 
 > Este `GEMINI.md` es el **archivo de contexto persistente para Gemini CLI**. Define las reglas operativas, el stack y el flujo de trabajo para este repositorio. No es un prompt para el chat web.
 
-## 1. Feature Activa: 022-firma-digital-jacobitus-timestamping
+## 1. Feature Activa: 023-gestion-multirol-cargos
 
 - **Constitución**: `.specify/memory/constitution.md`
-- **Spec**: `specs/022-firma-digital-jacobitus-timestamping/spec.md`
+- **Spec**: `specs/023-gestion-multirol-cargos/spec.md`
 
 ## Features Previas (archivadas en `specs/`)
+- **022-firma-digital-jacobitus-timestamping**: Integración con Firma Digital Jacobitus FIDO / AGETIC y sellado de tiempo TSA RFC 3161.
 - **021-proveidos-derivacion-multidestino**: Catálogo institucional de proveídos tipificados y derivaciones atómicas multidestino (Original vs Copia Informativa).
 - **020-ventanilla-unica-seguimiento-publico**: Ventanilla única de recepción de trámites externos, portal público de seguimiento sin sesión y emisión de comprobantes de recibo con código QR.
 - **019-gestor-cites-configurables**: Gestor de CITEs automáticos configurables con reglas de formateo dinámico por área y tipo de documento.
@@ -31,7 +32,7 @@
 
 ## 2. Próximas Features (Propuestas SDD)
 
-- **Feature 022: Integración con Firma Digital Jacobitus / AGETIC & Sellado de Tiempo (Timestamping)** (Activa)
+- **Feature 023: Gestión Multi-Rol de Usuarios y Cargos Institucionales por Área** (Activa)
 
 
 ## 2. Stack y Arquitectura

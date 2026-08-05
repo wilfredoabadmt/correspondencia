@@ -79,6 +79,7 @@ describe('AuthorizationService - Integration Test', () => {
         organizationId: MOCK_ORG_ID_1,
         role: 'ADMINISTRADOR',
         roleId: ADMIN_ROLE_ORG_1.id,
+        jobTitle: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };
@@ -90,6 +91,7 @@ describe('AuthorizationService - Integration Test', () => {
         organizationId: MOCK_ORG_ID_1,
         role: 'OPERADOR',
         roleId: OPERATOR_ROLE_ORG_1.id,
+        jobTitle: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };
@@ -101,6 +103,7 @@ describe('AuthorizationService - Integration Test', () => {
         organizationId: MOCK_ORG_ID_2,
         role: 'ADMINISTRADOR',
         roleId: ADMIN_ROLE_ORG_2.id,
+        jobTitle: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };

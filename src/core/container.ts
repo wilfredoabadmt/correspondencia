@@ -55,6 +55,8 @@ import { ListProveidosUseCase } from '~/modules/gestion-documental/application/l
 import { JacobitusRestService } from '~/modules/firma-digital/infra/jacobitus-rest.service';
 import { TsaTimestampService } from '~/modules/firma-digital/infra/tsa-timestamp.service';
 import { SignDocumentJacobitusUseCase } from '~/modules/gestion-documental/application/sign-document-jacobitus.use-case';
+import { DrizzleUserRoleAssignmentRepository } from '~/modules/users/infra/drizzle-user-role-assignment.repository';
+import { AssignUserRolesUseCase } from '~/modules/users/application/assign-user-roles.use-case';
 
 import { DrizzleUserRepository } from '~/modules/users/infra/drizzle-user.repository';
 import { CreateUserUseCase } from '~/modules/users/application/create-user.use-case';
@@ -171,6 +173,12 @@ container.register(InjectionTokens.TsaTimestampService, {
 });
 container.register(InjectionTokens.SignDocumentJacobitusUseCase, {
     useClass: SignDocumentJacobitusUseCase,
+});
+container.register(InjectionTokens.UserRoleAssignmentRepository, {
+    useClass: DrizzleUserRoleAssignmentRepository,
+});
+container.register(InjectionTokens.AssignUserRolesUseCase, {
+    useClass: AssignUserRolesUseCase,
 });
 
 // Register Expediente Dependencies

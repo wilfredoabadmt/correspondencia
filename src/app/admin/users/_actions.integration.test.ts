@@ -65,7 +65,7 @@ describe('User Management Server Actions', () => {
 
     it('listUsers should call ListUsersUseCase with correct context and return users', async () => {
         const mockUsers: User[] = [
-            { id: 'u1', name: 'User 1', email: 'u1@org.com', organizationId: MOCK_ORG_ID, role: 'ADMINISTRADOR', roleId: 'r1', createdAt: new Date(), updatedAt: new Date() },
+            { id: 'u1', name: 'User 1', email: 'u1@org.com', organizationId: MOCK_ORG_ID, role: 'ADMINISTRADOR', roleId: 'r1', jobTitle: null, createdAt: new Date(), updatedAt: new Date() },
         ];
         mockListUsersUseCase.execute.mockResolvedValue(mockUsers);
 
@@ -87,7 +87,7 @@ describe('User Management Server Actions', () => {
 
     it('createUser should call CreateUserUseCase with correct context and return new user', async () => {
         const newUserData = { name: 'New User', email: 'new@org.com', role: 'OPERADOR' as UserRole };
-        const mockCreatedUser: User = { ...newUserData, id: 'new-user-id', organizationId: MOCK_ORG_ID, roleId: 'r2', createdAt: new Date(), updatedAt: new Date() };
+        const mockCreatedUser: User = { ...newUserData, id: 'new-user-id', organizationId: MOCK_ORG_ID, roleId: 'r2', jobTitle: null, createdAt: new Date(), updatedAt: new Date() };
         const mockTemporaryPassword = 'temp_password';
         mockCreateUserUseCase.execute.mockResolvedValue({ user: mockCreatedUser, temporaryPassword: mockTemporaryPassword });
 
@@ -104,7 +104,7 @@ describe('User Management Server Actions', () => {
 
     it('updateUser should call UpdateUserUseCase with correct context and return updated user', async () => {
         const updateData = { id: 'u1', name: 'Updated Name', role: 'OPERADOR' as UserRole };
-        const mockUpdatedUser: User = { ...updateData, email: 'u1@org.com', organizationId: MOCK_ORG_ID, roleId: 'r2', createdAt: new Date(), updatedAt: new Date() };
+        const mockUpdatedUser: User = { ...updateData, email: 'u1@org.com', organizationId: MOCK_ORG_ID, roleId: 'r2', jobTitle: null, createdAt: new Date(), updatedAt: new Date() };
         mockUpdateUserUseCase.execute.mockResolvedValue(mockUpdatedUser);
 
         const result = await updateUser(updateData.id, updateData.name, updateData.role);

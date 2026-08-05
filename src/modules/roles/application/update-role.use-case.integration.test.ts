@@ -83,6 +83,7 @@ describe('UpdateRoleUseCase - Integration Test', () => {
         organizationId: MOCK_ORG_ID_1,
         role: 'ADMINISTRADOR',
         roleId: ADMIN_ROLE_ORG_1.id,
+        jobTitle: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };
@@ -94,6 +95,7 @@ describe('UpdateRoleUseCase - Integration Test', () => {
         organizationId: MOCK_ORG_ID_1,
         role: 'OPERADOR',
         roleId: OPERATOR_ROLE_ORG_1.id,
+        jobTitle: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };
