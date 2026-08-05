@@ -63,6 +63,10 @@ export interface IDocumentRepository {
         signatureHash: string;
         verificationCode: string;
         organizationId: string;
+        signedCertificateSubject?: string | null;
+        signedCertificateIssuer?: string | null;
+        timestampAuthority?: string | null;
+        timestampedAt?: Date | null;
     }): Promise<Document>;
 
     findByVerificationCode(params: {

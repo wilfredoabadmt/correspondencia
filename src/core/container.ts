@@ -52,6 +52,9 @@ import { GenerateReceiptPdfUseCase } from '~/modules/gestion-documental/applicat
 import { DrizzleProveidoCatalogRepository } from '~/modules/gestion-documental/infra/drizzle-proveido-catalog.repository';
 import { DeriveMultidestinationDocumentUseCase } from '~/modules/gestion-documental/application/derive-multidestination-document.use-case';
 import { ListProveidosUseCase } from '~/modules/gestion-documental/application/list-proveidos.use-case';
+import { JacobitusRestService } from '~/modules/firma-digital/infra/jacobitus-rest.service';
+import { TsaTimestampService } from '~/modules/firma-digital/infra/tsa-timestamp.service';
+import { SignDocumentJacobitusUseCase } from '~/modules/gestion-documental/application/sign-document-jacobitus.use-case';
 
 import { DrizzleUserRepository } from '~/modules/users/infra/drizzle-user.repository';
 import { CreateUserUseCase } from '~/modules/users/application/create-user.use-case';
@@ -159,6 +162,15 @@ container.register(InjectionTokens.DeriveMultidestinationDocumentUseCase, {
 });
 container.register(InjectionTokens.ListProveidosUseCase, {
     useClass: ListProveidosUseCase,
+});
+container.register(InjectionTokens.JacobitusService, {
+    useClass: JacobitusRestService,
+});
+container.register(InjectionTokens.TsaTimestampService, {
+    useClass: TsaTimestampService,
+});
+container.register(InjectionTokens.SignDocumentJacobitusUseCase, {
+    useClass: SignDocumentJacobitusUseCase,
 });
 
 // Register Expediente Dependencies

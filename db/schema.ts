@@ -161,6 +161,10 @@ export const documents = pgTable('documents', {
     applicantInstitution: text('applicant_institution'),
     applicantPhone: text('applicant_phone'),
     applicantEmail: text('applicant_email'),
+    signedCertificateSubject: text('signed_certificate_subject'),
+    signedCertificateIssuer: text('signed_certificate_issuer'),
+    timestampAuthority: text('timestamp_authority'),
+    timestampedAt: timestamp('timestamped_at'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => {

@@ -29,6 +29,9 @@ export const InjectionTokens = {
     ProveidoCatalogRepository: Symbol('IProveidoCatalogRepository'),
     DeriveMultidestinationDocumentUseCase: Symbol('IDeriveMultidestinationDocumentUseCase'),
     ListProveidosUseCase: Symbol('IListProveidosUseCase'),
+    JacobitusService: Symbol('IJacobitusService'),
+    TsaTimestampService: Symbol('ITsaTimestampService'),
+    SignDocumentJacobitusUseCase: Symbol('ISignDocumentJacobitusUseCase'),
     DocumentHistoryRepository: Symbol('IDocumentHistoryRepository'),
     GetDocumentHistoryUseCase: Symbol('IGetDocumentHistoryUseCase'),
     // Auth & Users

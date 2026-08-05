@@ -70,6 +70,10 @@ describe('GetDocumentDetailsUseCase', () => {
         applicantInstitution: null,
         applicantPhone: null,
         applicantEmail: null,
+        signedCertificateSubject: null,
+        signedCertificateIssuer: null,
+        timestampAuthority: null,
+        timestampedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };

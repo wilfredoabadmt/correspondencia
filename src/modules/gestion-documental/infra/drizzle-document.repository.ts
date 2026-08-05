@@ -295,12 +295,20 @@ export class DrizzleDocumentRepository implements IDocumentRepository {
         signatureHash,
         verificationCode,
         organizationId,
+        signedCertificateSubject,
+        signedCertificateIssuer,
+        timestampAuthority,
+        timestampedAt,
     }: {
         documentId: string;
         signedByUserId: string;
         signatureHash: string;
         verificationCode: string;
         organizationId: string;
+        signedCertificateSubject?: string | null;
+        signedCertificateIssuer?: string | null;
+        timestampAuthority?: string | null;
+        timestampedAt?: Date | null;
     }): Promise<Document> {
         return await this.db.transaction(async (tx) => {
             const [doc] = await tx
@@ -319,6 +327,10 @@ export class DrizzleDocumentRepository implements IDocumentRepository {
                     signedByUserId,
                     signatureHash,
                     verificationCode,
+                    signedCertificateSubject: signedCertificateSubject || null,
+                    signedCertificateIssuer: signedCertificateIssuer || null,
+                    timestampAuthority: timestampAuthority || null,
+                    timestampedAt: timestampedAt || null,
                     updatedAt: now,
                 })
                 .where(eq(schema.documents.id, documentId))
