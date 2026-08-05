@@ -139,27 +139,26 @@ export function DocumentsClientView({
 
             if (result.success && result.id) {
                 newDoc.id = result.id;
+                setDocuments(prev => [newDoc, ...prev]);
+                setSuccessMessage(`¡Documento ${citeCode} guardado exitosamente en base de datos!`);
+
+                setIsModalOpen(false);
+
+                // Reset form
+                setSubject('');
+                setRecipient('');
+                setCustomRecipient('');
+                setVias(['']);
+                setAttachment('');
+                setPageCount('1');
+
+                setTimeout(() => setSuccessMessage(''), 5000);
+            } else {
+                setSuccessMessage(`Error al guardar documento en base de datos: ${result.error || 'Error desconocido'}`);
             }
-
-            setDocuments(prev => [newDoc, ...prev]);
-            setSuccessMessage(`¡Documento ${citeCode} guardado exitosamente en base de datos!`);
-
-            setIsModalOpen(false);
-
-            // Reset form
-            setSubject('');
-            setRecipient('');
-            setCustomRecipient('');
-            setVias(['']);
-            setAttachment('');
-            setPageCount('1');
-
-            setTimeout(() => setSuccessMessage(''), 5000);
         } catch (err: any) {
             console.error('Error creating document:', err);
-            setSuccessMessage(`Documento registrado localmente (${citeCode})`);
-            setDocuments(prev => [newDoc, ...prev]);
-            setIsModalOpen(false);
+            setSuccessMessage(`Error al crear documento: ${err?.message || 'Fallo inesperado'}`);
         } finally {
             setIsSubmitting(false);
         }

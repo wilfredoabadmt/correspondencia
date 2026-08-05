@@ -65,19 +65,18 @@ export class GenerateRoutingSlipPdfUseCase {
 
         if (!doc && 
             !documentId.includes('sample') && 
-            !documentId.includes('tpl') &&
-            !documentId.startsWith('doc-gen-')) {
+            !documentId.includes('tpl')) {
             throw new Error('Documento no encontrado o no tiene autorización para acceder.');
         }
 
         const effectiveDoc = doc || {
             id: documentId,
-            trackingId: 'E-2026-00558',
-            trackingCode: 'AEV/DNP/INF/Nro.0028/2026',
-            subject: 'INFORME DE EVALUACIÓN TÉCNICA Y GESTIÓN DE CORRESPONDENCIA SIGEC',
-            sender: 'Juan José Espejo (Director General)',
+            trackingId: 'HOJA-RUTA-EJEMPLO',
+            trackingCode: 'AEV/DNP/INF/EJEMPLO-2026',
+            subject: 'DOCUMENTO DE MUESTRA PARA PLANTILLA DE HOJA DE RUTA',
+            sender: 'Ventanilla de Recepción',
             documentType: 'Informe',
-            destinationAreaName: 'Unidad de Tecnologías de Información y Comunicación',
+            destinationAreaName: 'Dirección Ejecutiva',
             createdAt: new Date(),
         };
 
@@ -89,7 +88,9 @@ export class GenerateRoutingSlipPdfUseCase {
                 50,
                 0
             );
-            historyItems = history?.history || (history as any)?.data || [];
+            const rawItems = history?.history || (history as any)?.data || [];
+            // Sort chronologically ascending (Step 1 = initial entry)
+            historyItems = [...rawItems].reverse();
         } catch {
             historyItems = [];
         }
@@ -97,16 +98,10 @@ export class GenerateRoutingSlipPdfUseCase {
         if (historyItems.length === 0) {
             historyItems = [
                 {
-                    fromAreaName: 'Mesa de Partes y Ventanilla Única',
-                    toAreaName: 'Dirección General Ejecutiva',
-                    comment: 'REGISTRO E INGRESO DE TRAMITE EN EL SISTEMA SIGEC',
-                    createdAt: new Date(),
-                },
-                {
-                    fromAreaName: 'Dirección General Ejecutiva',
-                    toAreaName: 'Unidad de Tecnologías de Información y Comunicación',
-                    comment: 'DERIVADO PARA SU ATENCION E INFORME CORRESPONDIENTE',
-                    createdAt: new Date(),
+                    fromAreaName: effectiveDoc.sender || 'Mesa de Partes / Remitente',
+                    toAreaName: effectiveDoc.destinationAreaName || 'Oficina Asignada',
+                    comment: 'REGISTRO E INGRESO DE TRÁMITE',
+                    createdAt: effectiveDoc.createdAt || new Date(),
                 },
             ];
         }
