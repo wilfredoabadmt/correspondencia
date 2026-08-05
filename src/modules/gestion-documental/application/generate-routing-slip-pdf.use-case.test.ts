@@ -20,6 +20,7 @@ class MockDocumentRepository implements IDocumentRepository {
     unarchiveDocument = vi.fn();
     signDocument = vi.fn();
     findByVerificationCode = vi.fn();
+    findByTrackingCode = vi.fn();
 }
 
 class MockHistoryRepository implements IDocumentHistoryRepository {
@@ -78,6 +79,12 @@ describe('GenerateRoutingSlipPdfUseCase', () => {
         signedByUserId: null,
         signatureHash: null,
         verificationCode: null,
+        isExternal: false,
+        applicantIdentityDocument: null,
+        applicantName: null,
+        applicantInstitution: null,
+        applicantPhone: null,
+        applicantEmail: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };

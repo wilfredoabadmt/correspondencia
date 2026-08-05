@@ -46,6 +46,9 @@ import { DisassociateDocumentUseCase } from '~/modules/gestion-documental/applic
 import { DrizzleCiteConfigRepository } from '~/modules/gestion-documental/infra/drizzle-cite-config.repository';
 import { GenerateNextCiteUseCase } from '~/modules/gestion-documental/application/generate-next-cite.use-case';
 import { ManageCiteConfigsUseCase } from '~/modules/gestion-documental/application/manage-cite-configs.use-case';
+import { GetPublicTrackingInfoUseCase } from '~/modules/gestion-documental/application/get-public-tracking-info.use-case';
+import { RegisterExternalDocumentUseCase } from '~/modules/gestion-documental/application/register-external-document.use-case';
+import { GenerateReceiptPdfUseCase } from '~/modules/gestion-documental/application/generate-receipt-pdf.use-case';
 
 import { DrizzleUserRepository } from '~/modules/users/infra/drizzle-user.repository';
 import { CreateUserUseCase } from '~/modules/users/application/create-user.use-case';
@@ -135,6 +138,15 @@ container.register(InjectionTokens.GenerateNextCiteUseCase, {
 });
 container.register(InjectionTokens.ManageCiteConfigsUseCase, {
     useClass: ManageCiteConfigsUseCase,
+});
+container.register(InjectionTokens.GetPublicTrackingInfoUseCase, {
+    useClass: GetPublicTrackingInfoUseCase,
+});
+container.register(InjectionTokens.RegisterExternalDocumentUseCase, {
+    useClass: RegisterExternalDocumentUseCase,
+});
+container.register(InjectionTokens.GenerateReceiptPdfUseCase, {
+    useClass: GenerateReceiptPdfUseCase,
 });
 
 // Register Expediente Dependencies

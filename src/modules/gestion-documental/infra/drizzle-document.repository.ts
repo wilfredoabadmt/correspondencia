@@ -1,5 +1,5 @@
 import { inject, injectable } from 'tsyringe';
-import { and, count, desc, eq, getTableColumns, ilike, or, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, getTableColumns, ilike, or, SQL, sql } from 'drizzle-orm';
 
 import type { DB } from '@/core/db/db.di';
 import * as schema from '@/db/schema';
@@ -363,6 +363,39 @@ export class DrizzleDocumentRepository implements IDocumentRepository {
                 eq(schema.documents.organizationId, schema.organizations.id)
             )
             .where(eq(schema.documents.verificationCode, verificationCode))
+            .limit(1);
+
+        if (result.length === 0) {
+            return null;
+        }
+
+        return result[0];
+    }
+
+    async findByTrackingCode({
+        trackingCode,
+    }: {
+        trackingCode: string;
+    }): Promise<(DocumentWithArea & { organizationName: string | null }) | null> {
+        const documentColumns = getTableColumns(schema.documents);
+        const result = await this.db
+            .select({
+                ...documentColumns,
+                destinationAreaName: schema.areaHierarchy.name,
+                organizationName: schema.organizations.name,
+            })
+            .from(schema.documents)
+            .leftJoin(
+                schema.areaHierarchy,
+                eq(schema.documents.destinationAreaId, schema.areaHierarchy.id)
+            )
+            .leftJoin(
+                schema.organizations,
+                eq(schema.documents.organizationId, schema.organizations.id)
+            )
+            .where(
+                sql`LOWER(${schema.documents.trackingCode}) = LOWER(${trackingCode}) OR LOWER(${schema.documents.trackingId}) = LOWER(${trackingCode})`
+            )
             .limit(1);
 
         if (result.length === 0) {

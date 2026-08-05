@@ -12,6 +12,7 @@ describe('SignDocumentUseCase', () => {
         repository = {
             findDetailsById: vi.fn(),
             signDocument: vi.fn(),
+            findByTrackingCode: vi.fn(),
         } as unknown as IDocumentRepository;
 
         useCase = new SignDocumentUseCase(repository);

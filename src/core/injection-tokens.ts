@@ -23,6 +23,9 @@ export const InjectionTokens = {
     CiteConfigRepository: Symbol('ICiteConfigRepository'),
     GenerateNextCiteUseCase: Symbol('IGenerateNextCiteUseCase'),
     ManageCiteConfigsUseCase: Symbol('IManageCiteConfigsUseCase'),
+    GetPublicTrackingInfoUseCase: Symbol('IGetPublicTrackingInfoUseCase'),
+    RegisterExternalDocumentUseCase: Symbol('IRegisterExternalDocumentUseCase'),
+    GenerateReceiptPdfUseCase: Symbol('IGenerateReceiptPdfUseCase'),
     DocumentHistoryRepository: Symbol('IDocumentHistoryRepository'),
     GetDocumentHistoryUseCase: Symbol('IGetDocumentHistoryUseCase'),
     // Auth & Users

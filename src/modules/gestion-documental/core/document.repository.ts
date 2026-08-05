@@ -68,4 +68,8 @@ export interface IDocumentRepository {
     findByVerificationCode(params: {
         verificationCode: string;
     }): Promise<(DocumentWithArea & { signedByUserName: string | null; organizationName: string | null }) | null>;
+
+    findByTrackingCode(params: {
+        trackingCode: string;
+    }): Promise<(DocumentWithArea & { organizationName: string | null }) | null>;
 }

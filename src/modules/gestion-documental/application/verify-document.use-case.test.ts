@@ -10,6 +10,7 @@ describe('VerifyDocumentUseCase', () => {
     beforeEach(() => {
         repository = {
             findByVerificationCode: vi.fn(),
+            findByTrackingCode: vi.fn(),
         } as unknown as IDocumentRepository;
 
         useCase = new VerifyDocumentUseCase(repository);

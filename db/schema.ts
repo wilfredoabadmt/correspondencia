@@ -155,6 +155,12 @@ export const documents = pgTable('documents', {
     signedByUserId: text('signed_by_user_id'),
     signatureHash: text('signature_hash'),
     verificationCode: text('verification_code'),
+    isExternal: boolean('is_external').default(false).notNull(),
+    applicantIdentityDocument: text('applicant_identity_document'),
+    applicantName: text('applicant_name'),
+    applicantInstitution: text('applicant_institution'),
+    applicantPhone: text('applicant_phone'),
+    applicantEmail: text('applicant_email'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => {
