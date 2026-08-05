@@ -6,6 +6,7 @@ import { SystemShell } from '~/components/layout/SystemShell';
 import {
     fetchPersistentRoles,
     createPersistentRole,
+    updatePersistentRole,
     deletePersistentRole,
     type PersistentRoleItem,
 } from './_actions';
@@ -55,6 +56,15 @@ export default function RolesManagementPage() {
     const [newRoleOffice, setNewRoleOffice] = useState('Oficina Nacional (La Paz)');
     const [newRoleDescription, setNewRoleDescription] = useState('');
     const [selectedPermissionIds, setSelectedPermissionIds] = useState<string[]>([]);
+
+    // Edit Role State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingRoleId, setEditingRoleId] = useState('');
+    const [editRoleName, setEditRoleName] = useState('');
+    const [editRoleOffice, setEditRoleOffice] = useState('');
+    const [editRoleDescription, setEditRoleDescription] = useState('');
+    const [editSelectedPermissionIds, setEditSelectedPermissionIds] = useState<string[]>([]);
+
     const [successMessage, setSuccessMessage] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
@@ -74,8 +84,8 @@ export default function RolesManagementPage() {
 
             // Merge server and local roles avoiding duplicates
             const combinedMap = new Map<string, PersistentRoleItem>();
-            serverData.forEach(r => combinedMap.set(r.name, r));
-            localData.forEach(r => combinedMap.set(r.name, r));
+            serverData.forEach(r => combinedMap.set(r.id, r));
+            localData.forEach(r => combinedMap.set(r.id, r));
 
             setRolesList(Array.from(combinedMap.values()));
         } catch {
@@ -89,17 +99,31 @@ export default function RolesManagementPage() {
         loadRoles();
     }, []);
 
-    const togglePermission = (permId: string) => {
-        setSelectedPermissionIds(prev =>
-            prev.includes(permId) ? prev.filter(id => id !== permId) : [...prev, permId]
-        );
+    const togglePermission = (permId: string, isEdit = false) => {
+        if (isEdit) {
+            setEditSelectedPermissionIds(prev =>
+                prev.includes(permId) ? prev.filter(id => id !== permId) : [...prev, permId]
+            );
+        } else {
+            setSelectedPermissionIds(prev =>
+                prev.includes(permId) ? prev.filter(id => id !== permId) : [...prev, permId]
+            );
+        }
     };
 
-    const handleSelectAllPermissions = () => {
-        if (selectedPermissionIds.length === ALL_PERMISSIONS.length) {
-            setSelectedPermissionIds([]);
+    const handleSelectAllPermissions = (isEdit = false) => {
+        if (isEdit) {
+            if (editSelectedPermissionIds.length === ALL_PERMISSIONS.length) {
+                setEditSelectedPermissionIds([]);
+            } else {
+                setEditSelectedPermissionIds(ALL_PERMISSIONS.map(p => p.id));
+            }
         } else {
-            setSelectedPermissionIds(ALL_PERMISSIONS.map(p => p.id));
+            if (selectedPermissionIds.length === ALL_PERMISSIONS.length) {
+                setSelectedPermissionIds([]);
+            } else {
+                setSelectedPermissionIds(ALL_PERMISSIONS.map(p => p.id));
+            }
         }
     };
 
@@ -116,16 +140,13 @@ export default function RolesManagementPage() {
                 selectedPermissionIds
             );
 
-            // Save to localStorage as dual-persistence
             if (typeof window !== 'undefined') {
                 try {
                     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
                     const currentLocal: PersistentRoleItem[] = stored ? JSON.parse(stored) : [];
-                    const updatedLocal = [newRole, ...currentLocal.filter(r => r.name !== newRole.name)];
+                    const updatedLocal = [newRole, ...currentLocal.filter(r => r.id !== newRole.id)];
                     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
-                } catch {
-                    // Ignore storage errors
-                }
+                } catch {}
             }
 
             setSuccessMessage(`¡Rol "${newRole.name}" creado con éxito para ${newRoleOffice}!`);
@@ -144,6 +165,50 @@ export default function RolesManagementPage() {
         }
     };
 
+    const handleOpenEditModal = (role: PersistentRoleItem) => {
+        setEditingRoleId(role.id);
+        setEditRoleName(role.name);
+        setEditRoleOffice(role.office);
+        setEditRoleDescription(role.description);
+        setEditSelectedPermissionIds([...role.permissions]);
+        setIsEditModalOpen(true);
+    };
+
+    const handleUpdateRole = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editRoleName.trim() || !editingRoleId) return;
+
+        try {
+            setSubmitting(true);
+            const updated = await updatePersistentRole(
+                editingRoleId,
+                editRoleName,
+                editRoleOffice,
+                editRoleDescription,
+                editSelectedPermissionIds
+            );
+
+            if (typeof window !== 'undefined') {
+                try {
+                    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    const currentLocal: PersistentRoleItem[] = stored ? JSON.parse(stored) : [];
+                    const updatedLocal = currentLocal.map(r => r.id === editingRoleId ? updated : r);
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
+                } catch {}
+            }
+
+            setSuccessMessage(`¡Rol "${updated.name}" actualizado exitosamente!`);
+            setIsEditModalOpen(false);
+
+            await loadRoles();
+            setTimeout(() => setSuccessMessage(''), 5000);
+        } catch (err: any) {
+            setSuccessMessage(`Error al actualizar rol: ${err.message}`);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const handleDeleteRole = async (id: string, rName: string) => {
         if (!confirm(`¿Está seguro de eliminar el rol "${rName}"?`)) return;
         try {
@@ -156,9 +221,7 @@ export default function RolesManagementPage() {
                         const updatedLocal = currentLocal.filter(r => r.id !== id && r.name !== rName);
                         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
                     }
-                } catch {
-                    // Ignore
-                }
+                } catch {}
             }
             setSuccessMessage(`Rol "${rName}" eliminado.`);
             await loadRoles();
@@ -190,7 +253,7 @@ export default function RolesManagementPage() {
                                 </span>
                             </div>
                             <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                                Defina y personalice roles con permisos estrictos en español para distintas dependencias y personal institucional.
+                                Defina, edite y personalice roles con permisos estrictos en español para distintas dependencias institucionales.
                             </p>
                         </div>
                     </div>
@@ -255,15 +318,24 @@ export default function RolesManagementPage() {
                                         <p className="text-xs text-cyan-400 font-mono mt-1">📍 {role.office}</p>
                                     </div>
 
-                                    {!role.isSystemRole && (
+                                    <div className="flex items-center gap-1.5">
                                         <button
-                                            onClick={() => handleDeleteRole(role.id, role.name)}
-                                            className="text-xs text-rose-400 hover:text-rose-300 p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
-                                            title="Eliminar Rol"
+                                            onClick={() => handleOpenEditModal(role)}
+                                            className="text-xs text-cyan-400 hover:text-white p-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 transition-colors"
+                                            title="Editar Rol y Permisos"
                                         >
-                                            🗑️
+                                            ✏️ Modificar
                                         </button>
-                                    )}
+                                        {!role.isSystemRole && (
+                                            <button
+                                                onClick={() => handleDeleteRole(role.id, role.name)}
+                                                className="text-xs text-rose-400 hover:text-rose-300 p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
+                                                title="Eliminar Rol"
+                                            >
+                                                🗑️
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <p className="text-xs text-slate-300 leading-relaxed">
@@ -345,7 +417,7 @@ export default function RolesManagementPage() {
                                         <label className="block text-xs font-bold text-cyan-400 uppercase tracking-wider">Asignación de Permisos Granulares:</label>
                                         <button
                                             type="button"
-                                            onClick={handleSelectAllPermissions}
+                                            onClick={() => handleSelectAllPermissions(false)}
                                             className="text-xs text-slate-300 hover:text-white underline font-semibold"
                                         >
                                             {selectedPermissionIds.length === ALL_PERMISSIONS.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
@@ -395,6 +467,119 @@ export default function RolesManagementPage() {
                                         className="px-6 py-2.5 rounded-xl font-bold text-xs text-white uppercase tracking-wider bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition-all"
                                     >
                                         {submitting ? 'Guardando...' : 'GUARDAR ROL'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Edit Role Modal */}
+                {isEditModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+                        <div className="w-full max-w-2xl glass-panel-glow rounded-3xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto border border-cyan-500/40 shadow-2xl animate-fadeIn">
+                            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                                <h3 className="text-xl font-bold text-white">✏️ Editar Rol y Permisos Granulares</h3>
+                                <button
+                                    onClick={() => setIsEditModalOpen(false)}
+                                    className="text-slate-400 hover:text-white text-lg font-bold"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleUpdateRole} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-300 mb-1">Nombre del Rol</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editRoleName}
+                                        onChange={(e) => setEditRoleName(e.target.value)}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:border-cyan-500 outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-300 mb-1">Oficina / Unidad Destino</label>
+                                    <select
+                                        value={editRoleOffice}
+                                        onChange={(e) => setEditRoleOffice(e.target.value)}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-medium focus:border-cyan-500 outline-none"
+                                    >
+                                        <option value="Oficina Nacional (La Paz)">Oficina Nacional (La Paz)</option>
+                                        <option value="Dirección Departamental Santa Cruz">Dirección Departamental Santa Cruz</option>
+                                        <option value="Dirección Departamental Cochabamba">Dirección Departamental Cochabamba</option>
+                                        <option value="Unidad Descentralizada Pando">Unidad Descentralizada Pando</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-300 mb-1">Descripción de Funciones</label>
+                                    <textarea
+                                        rows={2}
+                                        value={editRoleDescription}
+                                        onChange={(e) => setEditRoleDescription(e.target.value)}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
+                                    />
+                                </div>
+
+                                {/* Permissions Matrix */}
+                                <div className="space-y-3 pt-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="block text-xs font-bold text-cyan-400 uppercase tracking-wider">Modificar Permisos Asignados:</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSelectAllPermissions(true)}
+                                            className="text-xs text-slate-300 hover:text-white underline font-semibold"
+                                        >
+                                            {editSelectedPermissionIds.length === ALL_PERMISSIONS.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto p-3 rounded-2xl bg-slate-950/80 border border-slate-800 no-scrollbar">
+                                        {ALL_PERMISSIONS.map((perm) => {
+                                            const isChecked = editSelectedPermissionIds.includes(perm.id);
+                                            return (
+                                                <label
+                                                    key={perm.id}
+                                                    onClick={() => togglePermission(perm.id, true)}
+                                                    className={`p-3 rounded-xl border text-xs cursor-pointer flex items-start gap-2.5 transition-all ${
+                                                        isChecked
+                                                            ? 'bg-cyan-500/15 border-cyan-500/50 text-white shadow-md'
+                                                            : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:text-white hover:border-slate-700'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => {}}
+                                                        className="mt-0.5 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-0"
+                                                    />
+                                                    <div>
+                                                        <div className="font-bold text-xs text-white">{perm.title}</div>
+                                                        <div className="text-[10px] text-slate-300 mt-0.5">{perm.description}</div>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditModalOpen(false)}
+                                        className="px-4 py-2.5 rounded-xl font-semibold text-xs text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={submitting}
+                                        className="px-6 py-2.5 rounded-xl font-bold text-xs text-white uppercase tracking-wider bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-blue-500/25 transition-all"
+                                    >
+                                        {submitting ? 'Guardando...' : 'GUARDAR CAMBIOS'}
                                     </button>
                                 </div>
                             </form>

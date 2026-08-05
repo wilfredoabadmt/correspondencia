@@ -16,50 +16,33 @@ interface DocumentItem {
     createdAt?: Date | string | null;
 }
 
+interface SystemUser {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    role?: string | null;
+}
+
+interface SystemArea {
+    id: string;
+    name: string;
+    code?: string;
+}
+
 interface DocumentsClientViewProps {
     initialDocuments: DocumentItem[];
     organizationId: string;
+    systemUsers?: SystemUser[];
+    systemAreas?: SystemArea[];
 }
 
-export function DocumentsClientView({ initialDocuments, organizationId }: DocumentsClientViewProps) {
-    // Load from localStorage first (temporary persistence)
-    const getInitialDocuments = () => {
-        if (typeof window !== 'undefined') {
-            try {
-                const saved = localStorage.getItem(`generated-docs-${organizationId}`);
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        return parsed;
-                    }
-                }
-            } catch (e) {}
-        }
-        return initialDocuments.length > 0 ? initialDocuments : [
-            {
-                id: 'doc-sample-1',
-                trackingId: 'DOC-ORGA-001',
-                trackingCode: 'AEV/DNP/INF/Nro.0028/2026',
-                subject: 'INFORME DE EVALUACIÓN TÉCNICA DE PROYECTO DE VIVIENDA',
-                documentType: 'Informe',
-                sender: 'Juan José Espejo (Director General)',
-                status: 'En Proceso',
-                receptionDate: new Date().toISOString(),
-            },
-            {
-                id: 'doc-sample-2',
-                trackingId: 'DOC-ORGA-002',
-                trackingCode: 'AEV/DNP/NOT/Nro.0011/2026',
-                subject: 'ESTADO DEL SISTEMA DE GESTIÓN DE CORRESPONDENCIA SIGEC',
-                documentType: 'Nota Interna',
-                sender: 'Edwin Yujra (Jefe de Unidad TIC)',
-                status: 'Recibido',
-                receptionDate: new Date(Date.now() - 86400000).toISOString(),
-            },
-        ];
-    };
-
-    const [documents, setDocuments] = useState<DocumentItem[]>(getInitialDocuments());
+export function DocumentsClientView({
+    initialDocuments,
+    organizationId,
+    systemUsers = [],
+    systemAreas = [],
+}: DocumentsClientViewProps) {
+    const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
 
     const [filterQuery, setFilterQuery] = useState('');
     const [filterType, setFilterType] = useState('Todos');
@@ -70,22 +53,66 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
     const [docType, setDocType] = useState('Informe');
     const [subject, setSubject] = useState('');
     const [recipient, setRecipient] = useState('');
-    const [via, setVia] = useState('');
+    const [customRecipient, setCustomRecipient] = useState('');
+    const [vias, setVias] = useState<string[]>(['']);
     const [attachment, setAttachment] = useState('');
     const [pageCount, setPageCount] = useState('1');
     const [successMessage, setSuccessMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Build recipient and via options from system users and areas
+    const recipientOptions = [
+        ...systemUsers.map(u => ({
+            value: `${u.name || u.email} (${u.role || 'Usuario'})`,
+            label: `👤 ${u.name || u.email} — ${u.role || 'Servidor Público'}`,
+        })),
+        ...systemAreas.map(a => ({
+            value: `${a.name} [${a.code || 'ÁREA'}]`,
+            label: `🏢 ${a.name} (${a.code || 'ÁREA'})`,
+        })),
+    ];
+
+    const handleAddViaField = () => {
+        setVias(prev => [...prev, '']);
+    };
+
+    const handleRemoveViaField = (index: number) => {
+        setVias(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleViaChange = (index: number, val: string) => {
+        setVias(prev => {
+            const next = [...prev];
+            next[index] = val;
+            return next;
+        });
+    };
 
     const handleCreateDocument = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!subject.trim()) return;
 
+        setIsSubmitting(true);
         const dateYear = new Date().getFullYear();
         const randomNum = Math.floor(1000 + Math.random() * 9000);
-        const prefix = docType === 'Informe' ? 'INF' : docType === 'Nota Interna' ? 'NOT' : docType === 'Carta' ? 'CAR' : 'CIR';
+        const prefixMap: Record<string, string> = {
+            'Informe': 'INF',
+            'Nota Interna': 'NI',
+            'Nota Externa': 'NE',
+            'Memorándum': 'MEM',
+            'Instructivo': 'INS',
+            'Carta': 'CAR',
+            'Circular': 'CIR',
+            'Resolución': 'RES',
+        };
+        const prefix = prefixMap[docType] || 'DOC';
         const citeCode = modalMode === 'WITH_ROUTE' 
             ? `AEV/DNP/${prefix}/Nro.${randomNum}/${dateYear}` 
             : `BORRADOR-${prefix}-${randomNum}`;
         const trackingId = `DOC-ORGA-${randomNum}`;
+
+        const finalRecipient = recipient === 'CUSTOM' ? customRecipient : recipient || 'Servidor Público Responsable';
+        const activeVias = vias.filter(v => v.trim());
 
         const newDoc: DocumentItem = {
             id: `doc-gen-${Date.now()}`,
@@ -93,34 +120,49 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
             trackingCode: citeCode,
             subject: subject.trim().toUpperCase(),
             documentType: docType,
-            sender: recipient || 'Servidor Público Responsable',
+            sender: finalRecipient,
             status: modalMode === 'WITH_ROUTE' ? 'En Proceso' : 'Borrador Sin Hoja de Ruta',
             receptionDate: new Date().toISOString(),
         };
 
-        // TEMPORARY: Save only in client memory (localStorage) until DB issue is fixed
-        const updatedDocs = [newDoc, ...documents];
-        setDocuments(updatedDocs);
-
-        // Persist in localStorage so it survives navigation
         try {
-            localStorage.setItem(`generated-docs-${organizationId}`, JSON.stringify(updatedDocs));
-        } catch (e) {
-            console.warn('Could not save to localStorage');
+            // Save to DB via Server Action
+            const result = await createGeneratedDocument({
+                trackingCode: citeCode,
+                trackingId: trackingId,
+                subject: subject.trim().toUpperCase(),
+                documentType: docType,
+                sender: finalRecipient,
+                status: modalMode === 'WITH_ROUTE' ? 'En Proceso' : 'Borrador',
+                organizationId: organizationId,
+            });
+
+            if (result.success && result.id) {
+                newDoc.id = result.id;
+            }
+
+            setDocuments(prev => [newDoc, ...prev]);
+            setSuccessMessage(`¡Documento ${citeCode} guardado exitosamente en base de datos!`);
+
+            setIsModalOpen(false);
+
+            // Reset form
+            setSubject('');
+            setRecipient('');
+            setCustomRecipient('');
+            setVias(['']);
+            setAttachment('');
+            setPageCount('1');
+
+            setTimeout(() => setSuccessMessage(''), 5000);
+        } catch (err: any) {
+            console.error('Error creating document:', err);
+            setSuccessMessage(`Documento registrado localmente (${citeCode})`);
+            setDocuments(prev => [newDoc, ...prev]);
+            setIsModalOpen(false);
+        } finally {
+            setIsSubmitting(false);
         }
-
-        setSuccessMessage(`¡Documento ${citeCode} generado exitosamente! (guardado temporalmente)`);
-
-        setIsModalOpen(false);
-
-        // Reset form
-        setSubject('');
-        setRecipient('');
-        setVia('');
-        setAttachment('');
-        setPageCount('1');
-
-        setTimeout(() => setSuccessMessage(''), 5000);
     };
 
     const filteredDocs = documents.filter(doc => {
@@ -146,7 +188,7 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
                         </span>
                     </div>
                     <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                        Cree Informes, Notas Internas, Cartas y Circulares con CITE oficial y Hoja de Ruta automatizada.
+                        Cree Informes, Notas Internas, Memorándums, Cartas y Resoluciones con CITE oficial y asignación jerárquica.
                     </p>
                 </div>
 
@@ -203,9 +245,13 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
                         >
                             <option value="Todos">Todos los tipos</option>
                             <option value="Informe">Informe (INF)</option>
-                            <option value="Nota Interna">Nota Interna (NOT)</option>
+                            <option value="Nota Interna">Nota Interna (NI)</option>
+                            <option value="Nota Externa">Nota Externa (NE)</option>
+                            <option value="Memorándum">Memorándum (MEM)</option>
+                            <option value="Instructivo">Instructivo (INS)</option>
                             <option value="Carta">Carta (CAR)</option>
                             <option value="Circular">Circular (CIR)</option>
+                            <option value="Resolución">Resolución (RES)</option>
                         </select>
                     </div>
                 </div>
@@ -318,9 +364,13 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
                                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:border-cyan-500 outline-none"
                                 >
                                     <option value="Informe">Informe (INF)</option>
-                                    <option value="Nota Interna">Nota Interna (NOT)</option>
+                                    <option value="Nota Interna">Nota Interna (NI)</option>
+                                    <option value="Nota Externa">Nota Externa (NE)</option>
+                                    <option value="Memorándum">Memorándum (MEM)</option>
+                                    <option value="Instructivo">Instructivo (INS)</option>
                                     <option value="Carta">Carta (CAR)</option>
                                     <option value="Circular">Circular (CIR)</option>
+                                    <option value="Resolución">Resolución (RES)</option>
                                 </select>
                             </div>
 
@@ -336,31 +386,82 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-300 mb-1">Nombre / Cargo Destinatario</label>
-                                    <input
-                                        type="text"
-                                        value={recipient}
-                                        onChange={(e) => setRecipient(e.target.value)}
-                                        placeholder="Ej: Juan José Espejo (Director General)"
-                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
-                                    />
-                                </div>
+                            {/* Destinatario Selection List */}
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1">
+                                    Nombre / Cargo Destinatario
+                                </label>
+                                <select
+                                    value={recipient}
+                                    onChange={(e) => setRecipient(e.target.value)}
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
+                                >
+                                    <option value="">Seleccione Destinatario (Usuario o Área)...</option>
+                                    {recipientOptions.map((opt, i) => (
+                                        <option key={i} value={opt.value}>
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                    <option value="CUSTOM">✏️ Escribir otro destinatario personalizado...</option>
+                                </select>
 
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-300 mb-1">Vía (Aprobador Inmediato)</label>
+                                {recipient === 'CUSTOM' && (
                                     <input
                                         type="text"
-                                        value={via}
-                                        onChange={(e) => setVia(e.target.value)}
-                                        placeholder="Ej: Edwin Yujra (Jefe TIC)"
-                                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
+                                        required
+                                        value={customRecipient}
+                                        onChange={(e) => setCustomRecipient(e.target.value)}
+                                        placeholder="Escriba el nombre y cargo completo del destinatario..."
+                                        className="w-full mt-2 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-cyan-500/60 text-white text-xs outline-none"
                                     />
-                                </div>
+                                )}
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Dynamic Multiple Vías Section */}
+                            <div className="space-y-2 pt-1 border-t border-slate-800/80">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-xs font-bold text-cyan-400 uppercase tracking-wider">
+                                        Vía (Aprobadores Inmediatos)
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddViaField}
+                                        className="px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all"
+                                    >
+                                        + Adicionar Vía
+                                    </button>
+                                </div>
+
+                                {vias.map((vVal, idx) => (
+                                    <div key={idx} className="flex items-center gap-2">
+                                        <select
+                                            value={vVal}
+                                            onChange={(e) => handleViaChange(idx, e.target.value)}
+                                            className="flex-1 px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-cyan-500 outline-none"
+                                        >
+                                            <option value="">Seleccione Vía {idx + 1} (Aprobador)...</option>
+                                            {recipientOptions.map((opt, i) => (
+                                                <option key={i} value={opt.value}>
+                                                    {opt.label}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        {vias.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveViaField(idx)}
+                                                className="p-2 rounded-xl text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-500/30 border border-rose-500/30 text-xs font-bold transition-colors"
+                                                title="Eliminar esta Vía"
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                                 <div>
                                     <label className="block text-xs font-medium text-slate-300 mb-1">Adjuntos (Ej: 2 CDs, Fotografías)</label>
                                     <input
@@ -394,9 +495,10 @@ export function DocumentsClientView({ initialDocuments, organizationId }: Docume
                                 </button>
                                 <button
                                     type="submit"
+                                    disabled={isSubmitting}
                                     className="px-6 py-2.5 rounded-xl font-bold text-xs text-white uppercase tracking-wider bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-blue-500/25 transition-all"
                                 >
-                                    Guardar y Generar Documento
+                                    {isSubmitting ? 'Guardando...' : 'Guardar y Generar Documento'}
                                 </button>
                             </div>
                         </form>

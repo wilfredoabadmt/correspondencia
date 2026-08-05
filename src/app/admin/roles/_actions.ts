@@ -101,6 +101,30 @@ export async function createPersistentRole(
     return newRole;
 }
 
+export async function updatePersistentRole(
+    id: string,
+    name: string,
+    office: string,
+    description: string,
+    permissions: string[]
+): Promise<PersistentRoleItem> {
+    await checkSuperAdminAuth();
+
+    const idx = ROLES_STORE.findIndex(r => r.id === id);
+    if (idx !== -1) {
+        ROLES_STORE[idx] = {
+            ...ROLES_STORE[idx],
+            name: name.trim().toUpperCase(),
+            office,
+            description: description || 'Rol actualizado por Administrador.',
+            permissions,
+        };
+        return ROLES_STORE[idx];
+    }
+
+    throw new Error('Rol no encontrado');
+}
+
 export async function deletePersistentRole(id: string): Promise<void> {
     await checkSuperAdminAuth();
     const idx = ROLES_STORE.findIndex(r => r.id === id);

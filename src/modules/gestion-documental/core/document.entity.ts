@@ -8,6 +8,9 @@ export const DocumentType = {
     NOTA_INTERNA: 'NI',
     MEMORANDUM: 'MEM',
     INSTRUCTIVO: 'INS',
+    CARTA: 'CAR',
+    CIRCULAR: 'CIR',
+    RESOLUCION: 'RES',
 } as const;
 
 export type DocumentType = (typeof DocumentType)[keyof typeof DocumentType];
