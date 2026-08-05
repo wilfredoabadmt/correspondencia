@@ -1,11 +1,10 @@
 'use server';
 
 import 'reflect-metadata';
-import { container } from 'tsyringe';
+import { container, InjectionTokens } from '~/core/container';
 import { redirect } from 'next/navigation';
 
 import { auth } from '~/modules/auth/lib/auth';
-import { InjectionTokens } from '~/core/injection-tokens';
 import { ListUsersUseCase } from '~/modules/users/application/list-users.use-case';
 import { CreateUserUseCase } from '~/modules/users/application/create-user.use-case';
 import { UpdateUserUseCase } from '~/modules/users/application/update-user.use-case';

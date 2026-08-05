@@ -1,7 +1,7 @@
 'use server';
 
 import 'reflect-metadata'; // Required for tsyringe
-import { container } from 'tsyringe';
+import { container } from '~/core/container';
 import { GetDocumentHistoryUseCase } from '~/modules/gestion-documental/application/get-document-history.use-case';
 import { InjectionTokens } from '~/core/injection-tokens';
 import { IDocumentHistoryRepository } from '~/modules/gestion-documental/core/document-history.repository';
