@@ -1,11 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
+    swcMinify: true,
     eslint: {
         ignoreDuringBuilds: true,
     },
     typescript: {
         ignoreBuildErrors: true,
+    },
+    experimental: {
+        outputFileTracingExcludes: {
+            '*': [
+                'node_modules/@swc/core-linux-x64-gnu',
+                'node_modules/@swc/core-linux-x64-musl',
+                'node_modules/@esbuild',
+                'node_modules/webpack',
+                'node_modules/terser',
+            ],
+        },
     },
 };
 
