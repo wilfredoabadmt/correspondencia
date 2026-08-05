@@ -6,6 +6,7 @@ import type { IUserRepository } from '../core/user.repository';
 export interface ChangePasswordDTO {
     userId: string;
     organizationId: string;
+    email?: string;
     currentPassword?: string;
     newPassword?: string;
 }
@@ -17,7 +18,7 @@ export class ChangePasswordUseCase {
         private readonly userRepository: IUserRepository
     ) {}
 
-    async execute({ userId, organizationId, currentPassword, newPassword }: ChangePasswordDTO): Promise<void> {
+    async execute({ userId, organizationId, email, currentPassword, newPassword }: ChangePasswordDTO): Promise<void> {
         if (!currentPassword || !newPassword) {
             throw new Error('Debe proporcionar la contraseña actual y la nueva contraseña.');
         }
@@ -26,9 +27,17 @@ export class ChangePasswordUseCase {
             throw new Error('La nueva contraseña debe tener al menos 6 caracteres.');
         }
 
-        const hashedPassword = this.userRepository.findHashedPasswordById
-            ? await this.userRepository.findHashedPasswordById(userId, organizationId)
+        let hashedPassword = this.userRepository.findHashedPasswordById
+            ? await this.userRepository.findHashedPasswordById(userId, organizationId, email)
             : null;
+
+        if (!hashedPassword && email) {
+            const user = await this.userRepository.findByEmail(email, organizationId);
+            if (user && this.userRepository.findHashedPasswordById) {
+                hashedPassword = await this.userRepository.findHashedPasswordById(user.id, organizationId, email);
+            }
+        }
+
         if (!hashedPassword) {
             throw new Error('Usuario no encontrado.');
         }
@@ -41,6 +50,6 @@ export class ChangePasswordUseCase {
         const newHashedPassword = await bcrypt.hash(newPassword, 10);
         await this.userRepository.update(userId, organizationId, {
             hashedPassword: newHashedPassword,
-        });
+        }, email);
     }
 }

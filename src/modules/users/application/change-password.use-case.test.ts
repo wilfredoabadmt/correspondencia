@@ -35,9 +35,14 @@ describe('ChangePasswordUseCase', () => {
             newPassword: 'newSecret123',
         });
 
-        expect(mockRepo.update).toHaveBeenCalledWith('user-1', 'org-1', expect.objectContaining({
-            hashedPassword: expect.any(String),
-        }));
+        expect(mockRepo.update).toHaveBeenCalledWith(
+            'user-1',
+            'org-1',
+            expect.objectContaining({
+                hashedPassword: expect.any(String),
+            }),
+            undefined
+        );
     });
 
     it('debe lanzar un error si la contraseña actual es incorrecta', async () => {

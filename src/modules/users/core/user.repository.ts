@@ -27,8 +27,8 @@ export interface IUserRepository {
     findById(id: string, organizationId: string): Promise<User | null>;
     findByEmail(email: string, organizationId: string): Promise<User | null>;
     create(data: UserInsertData): Promise<User>;
-    update(id: string, organizationId: string, data: UserUpdateData): Promise<User | null>;
+    update(id: string, organizationId: string, data: UserUpdateData, email?: string): Promise<User | null>;
     delete(id: string, organizationId: string): Promise<void>;
-    findHashedPasswordById?(id: string, organizationId: string): Promise<string | null>;
+    findHashedPasswordById?(id: string, organizationId: string, email?: string): Promise<string | null>;
     countAdminsByOrganizationId(organizationId: string): Promise<number>;
 }

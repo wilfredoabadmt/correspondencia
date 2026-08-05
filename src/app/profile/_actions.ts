@@ -22,6 +22,7 @@ export async function changePasswordAction(formData: FormData): Promise<void> {
     await useCase.execute({
         userId: session.user.id,
         organizationId: session.user.organizationId,
+        email: session.user.email,
         currentPassword,
         newPassword,
     });

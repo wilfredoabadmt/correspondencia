@@ -145,12 +145,19 @@ export class DrizzleUserRepository implements IUserRepository {
         }
     }
 
-    async update(id: string, organizationId: string, data: UserUpdateData): Promise<User | null> {
+    async update(id: string, organizationId: string, data: UserUpdateData, email?: string): Promise<User | null> {
         try {
+            const conditions = [eq(schema.users.organizationId, organizationId)];
+            if (id) {
+                conditions.push(eq(schema.users.id, id));
+            } else if (email) {
+                conditions.push(eq(schema.users.email, email));
+            }
+
             const [updatedUserRow] = await this.db
                 .update(schema.users)
                 .set(data)
-                .where(and(eq(schema.users.id, id), eq(schema.users.organizationId, organizationId)))
+                .where(and(...conditions))
                 .returning(getTableColumns(schema.users));
 
             if (updatedUserRow) return this.mapToUser(updatedUserRow);
@@ -158,7 +165,7 @@ export class DrizzleUserRepository implements IUserRepository {
             // Fallback
         }
 
-        const idx = DEMO_USERS.findIndex(u => u.id === id);
+        const idx = DEMO_USERS.findIndex(u => u.id === id || (email && u.email === email));
         if (idx !== -1) {
             DEMO_USERS[idx] = { ...DEMO_USERS[idx], ...data } as User;
             return DEMO_USERS[idx];
@@ -181,7 +188,7 @@ export class DrizzleUserRepository implements IUserRepository {
         }
     }
 
-    async findHashedPasswordById(id: string, organizationId: string): Promise<string | null> {
+    async findHashedPasswordById(id: string, organizationId: string, email?: string): Promise<string | null> {
         try {
             const [row] = await this.db
                 .select({ hashedPassword: schema.users.hashedPassword })
@@ -189,10 +196,28 @@ export class DrizzleUserRepository implements IUserRepository {
                 .where(and(eq(schema.users.id, id), eq(schema.users.organizationId, organizationId)))
                 .limit(1);
 
-            return row?.hashedPassword ?? null;
+            if (row?.hashedPassword) return row.hashedPassword;
+
+            if (email) {
+                const [emailRow] = await this.db
+                    .select({ hashedPassword: schema.users.hashedPassword })
+                    .from(schema.users)
+                    .where(and(eq(schema.users.email, email), eq(schema.users.organizationId, organizationId)))
+                    .limit(1);
+
+                if (emailRow?.hashedPassword) return emailRow.hashedPassword;
+            }
         } catch {
-            return null;
+            // ignore DB error
         }
+
+        const demo = DEMO_USERS.find(u => u.id === id || (email && u.email === email));
+        if (demo) {
+            // Pre-hashed bcrypt for 'admin123'
+            return '$2a$10$UnX/g770nZ.7/wL2wzJ1u.g5mEwL1rB9A0vW3vM.5eN1v6qM3k0lS';
+        }
+
+        return null;
     }
 
     async countAdminsByOrganizationId(organizationId: string): Promise<number> {
