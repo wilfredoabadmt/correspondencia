@@ -44,7 +44,6 @@ const PERMISSION_LABEL_MAP: Record<string, string> = ALL_PERMISSIONS.reduce((acc
     return acc;
 }, {} as Record<string, string>);
 
-const LOCAL_STORAGE_KEY = 'gestordoc_custom_roles';
 
 export default function RolesManagementPage() {
     const [selectedOffice, setSelectedOffice] = useState('Todas');
@@ -72,25 +71,14 @@ export default function RolesManagementPage() {
         try {
             setLoading(true);
             const res = await fetchPersistentRoles();
-            const serverData = res.data || [];
-            let localData: PersistentRoleItem[] = [];
-            if (typeof window !== 'undefined') {
-                try {
-                    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-                    if (stored) localData = JSON.parse(stored);
-                } catch {
-                    localData = [];
-                }
+            if (res.success && res.data) {
+                setRolesList(res.data);
+            } else if (res.error) {
+                setSuccessMessage(`Aviso: ${res.error}`);
             }
-
-            // Merge server and local roles avoiding duplicates
-            const combinedMap = new Map<string, PersistentRoleItem>();
-            serverData.forEach(r => combinedMap.set(r.id, r));
-            localData.forEach(r => combinedMap.set(r.id, r));
-
-            setRolesList(Array.from(combinedMap.values()));
-        } catch {
+        } catch (err: any) {
             setRolesList([]);
+            setSuccessMessage(`Error al cargar roles: ${err?.message || 'Fallo de conexión'}`);
         } finally {
             setLoading(false);
         }
@@ -147,16 +135,7 @@ export default function RolesManagementPage() {
             }
 
             const newRole = res.data;
-            if (typeof window !== 'undefined') {
-                try {
-                    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-                    const currentLocal: PersistentRoleItem[] = stored ? JSON.parse(stored) : [];
-                    const updatedLocal = [newRole, ...currentLocal.filter(r => r.id !== newRole.id)];
-                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
-                } catch {}
-            }
-
-            setSuccessMessage(`¡Rol "${newRole.name}" creado con éxito para ${newRoleOffice}!`);
+            setSuccessMessage(`¡Rol "${newRole.name}" creado con éxito en la base de datos!`);
             setIsCreateModalOpen(false);
 
             setNewRoleName('');
@@ -201,26 +180,7 @@ export default function RolesManagementPage() {
             }
 
             const updated = res.data;
-            if (typeof window !== 'undefined') {
-                try {
-                    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-                    let currentLocal: PersistentRoleItem[] = stored ? JSON.parse(stored) : [];
-                    let found = false;
-                    currentLocal = currentLocal.map(r => {
-                        if (r.id === editingRoleId || r.name.toUpperCase() === updated.name.toUpperCase()) {
-                            found = true;
-                            return updated;
-                        }
-                        return r;
-                    });
-                    if (!found) {
-                        currentLocal.unshift(updated);
-                    }
-                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(currentLocal));
-                } catch {}
-            }
-
-            setSuccessMessage(`¡Rol "${updated.name}" actualizado exitosamente!`);
+            setSuccessMessage(`¡Rol "${updated.name}" actualizado exitosamente en la base de datos!`);
             setIsEditModalOpen(false);
 
             await loadRoles();
@@ -236,20 +196,10 @@ export default function RolesManagementPage() {
         if (!confirm(`¿Está seguro de eliminar el rol "${rName}"?`)) return;
         try {
             const res = await deletePersistentRole(id, rName);
-            if (typeof window !== 'undefined') {
-                try {
-                    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-                    if (stored) {
-                        const currentLocal: PersistentRoleItem[] = JSON.parse(stored);
-                        const updatedLocal = currentLocal.filter(r => r.id !== id && r.name.toUpperCase() !== rName.toUpperCase());
-                        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
-                    }
-                } catch {}
-            }
             if (res.success) {
-                setSuccessMessage(`Rol "${rName}" eliminado.`);
+                setSuccessMessage(`Rol "${rName}" eliminado de la base de datos.`);
             } else {
-                setSuccessMessage(`Aviso: ${res.error || 'Se eliminó localmente'}`);
+                setSuccessMessage(`Error al eliminar: ${res.error || 'Fallo al eliminar de DB'}`);
             }
             await loadRoles();
         } catch (err: any) {

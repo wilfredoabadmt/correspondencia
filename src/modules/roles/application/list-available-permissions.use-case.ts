@@ -14,7 +14,7 @@ export class ListAvailablePermissionsUseCase {
     // Temporalmente, solo ADMINS pueden listar permisos.
     // Esto se reemplazará por la verificación de permisos (ej. 'role.view')
     // una vez que el AuthorizationService esté implementado.
-    private readonly AUTHORIZED_ROLES: UserRole[] = ['ADMINISTRADOR'];
+    private readonly AUTHORIZED_ROLES: UserRole[] = ['ADMINISTRADOR', 'SUPERADMIN'];
 
     constructor(
         @inject(InjectionTokens.PermissionRepository)

@@ -17,7 +17,7 @@ export class UpdateRoleUseCase {
     // Temporalmente, solo ADMINS pueden actualizar roles.
     // Esto se reemplazará por la verificación de permisos (ej. 'role.manage')
     // una vez que el AuthorizationService esté implementado.
-    private readonly AUTHORIZED_ROLES: UserRole[] = ['ADMINISTRADOR'];
+    private readonly AUTHORIZED_ROLES: UserRole[] = ['ADMINISTRADOR', 'SUPERADMIN'];
     private readonly CRITICAL_PERMISSIONS = ['role.manage', 'user.manage'];
 
     constructor(

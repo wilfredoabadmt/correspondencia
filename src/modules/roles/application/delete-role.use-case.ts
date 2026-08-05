@@ -15,7 +15,7 @@ export class DeleteRoleUseCase {
     // Temporalmente, solo ADMINS pueden eliminar roles.
     // Esto se reemplazará por la verificación de permisos (ej. 'role.manage')
     // una vez que el AuthorizationService esté implementado.
-    private readonly AUTHORIZED_ROLES: UserRole[] = ['ADMINISTRADOR'];
+    private readonly AUTHORIZED_ROLES: UserRole[] = ['ADMINISTRADOR', 'SUPERADMIN'];
 
     constructor(
         @inject(InjectionTokens.RoleRepository)

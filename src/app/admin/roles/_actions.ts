@@ -1,6 +1,14 @@
 'use server';
 
+import 'reflect-metadata';
+import { container, InjectionTokens } from '~/core/container';
 import { auth } from '~/modules/auth/lib/auth';
+import type { ListRolesUseCase } from '~/modules/roles/application/list-roles.use-case';
+import type { CreateRoleUseCase } from '~/modules/roles/application/create-role.use-case';
+import type { UpdateRoleUseCase } from '~/modules/roles/application/update-role.use-case';
+import type { DeleteRoleUseCase } from '~/modules/roles/application/delete-role.use-case';
+import type { Role } from '~/modules/roles/core/role.repository';
+import type { UserRole } from '~/modules/users/core/user.repository';
 
 export interface PersistentRoleItem {
     id: string;
@@ -18,14 +26,42 @@ export interface RoleActionResult<T = any> {
     error?: string;
 }
 
-// Default seed roles list including SECRETARIA
-let ROLES_STORE: PersistentRoleItem[] = [
+async function checkAuthUser() {
+    try {
+        const session = await auth();
+        if (!session?.user?.organizationId) {
+            return { authenticated: false, error: 'Sesión no iniciada o expirada.' };
+        }
+        return {
+            authenticated: true,
+            user: {
+                id: session.user.id || 'user-id',
+                organizationId: session.user.organizationId,
+                role: (session.user as any).role || 'OPERADOR',
+            },
+        };
+    } catch {
+        return { authenticated: false, error: 'Error verificando sesión de usuario.' };
+    }
+}
+
+function mapRoleToItem(role: Role): PersistentRoleItem {
+    return {
+        id: role.id,
+        name: role.name,
+        office: 'Oficina Central',
+        isSystemRole: role.isSystemRole,
+        permissions: (role.permissions || []).map((p) => p.id),
+        description: role.isSystemRole
+            ? `Rol de sistema ${role.name}`
+            : `Rol asignado institucionalmente`,
+        createdAt: role.createdAt ? new Date(role.createdAt).toISOString() : undefined,
+    };
+}
+
+const DEFAULT_SYSTEM_ROLES = [
     {
-        id: 'role-1',
-        name: 'SUPERADMIN (Administrador Global)',
-        office: 'Oficina Nacional (La Paz)',
-        isSystemRole: true,
-        description: 'Control absoluto del sistema, creación de organizaciones y administración global de roles.',
+        name: 'SUPERADMIN',
         permissions: [
             'document.create', 'document.view.all', 'document.view.own', 'document.derive',
             'document.approve', 'document.reject', 'document.delete', 'user.manage',
@@ -34,57 +70,66 @@ let ROLES_STORE: PersistentRoleItem[] = [
         ],
     },
     {
-        id: 'role-2',
-        name: 'ADMINISTRADOR DE OFICINA',
-        office: 'Oficina Nacional (La Paz)',
-        isSystemRole: true,
-        description: 'Administración de usuarios, áreas y monitoreo gerencial de la Oficina Nacional.',
-        permissions: ['document.create', 'document.view.all', 'document.derive', 'user.manage', 'user.view', 'area.manage', 'role.view'],
+        name: 'ADMINISTRADOR',
+        permissions: [
+            'document.create', 'document.view.all', 'document.derive', 'user.manage',
+            'user.view', 'area.manage', 'role.view',
+        ],
     },
     {
-        id: 'role-3',
-        name: 'OPERADOR DE VENTANILLA',
-        office: 'Oficina Nacional (La Paz)',
-        isSystemRole: false,
-        description: 'Recepción de correspondencia externa, asignación de CITEs e impresión de Hojas de Ruta.',
+        name: 'OPERADOR',
         permissions: ['document.create', 'document.view.own', 'document.derive', 'user.view', 'area.view'],
     },
     {
-        id: 'role-4',
-        name: 'DIRECTOR DE PLANIFICACIÓN',
-        office: 'Dirección Departamental Santa Cruz',
-        isSystemRole: false,
-        description: 'Supervisión de informes técnicos, aprobación de notas internas y derivación prioritaria.',
-        permissions: ['document.create', 'document.view.all', 'document.derive', 'document.approve', 'document.reject', 'user.view', 'area.view'],
-    },
-    {
-        id: 'role-5',
         name: 'SECRETARIA',
-        office: 'Oficina Nacional (La Paz)',
-        isSystemRole: false,
-        description: 'Gestión de correspondencia recibida, atención a ventanilla y despacho de notas internas.',
         permissions: ['document.create', 'document.view.all', 'document.view.own', 'document.derive'],
     },
 ];
 
-async function checkAuthUser() {
-    try {
-        const session = await auth();
-        if (!session?.user) {
-            return { authenticated: false, error: 'Sesión no iniciada o expirada.' };
-        }
-        return { authenticated: true, user: session.user };
-    } catch {
-        return { authenticated: false, error: 'Error verificando sesión de usuario.' };
-    }
-}
-
 export async function fetchPersistentRoles(): Promise<RoleActionResult<PersistentRoleItem[]>> {
     const authCheck = await checkAuthUser();
-    if (!authCheck.authenticated) {
-        return { success: false, error: authCheck.error, data: ROLES_STORE };
+    if (!authCheck.authenticated || !authCheck.user) {
+        return { success: false, error: authCheck.error };
     }
-    return { success: true, data: ROLES_STORE };
+
+    try {
+        const { organizationId, id: userId, role: userRole } = authCheck.user;
+        const listRolesUseCase = container.resolve<ListRolesUseCase>(InjectionTokens.ListRolesUseCase);
+        let roles = await listRolesUseCase.execute({
+            organizationId,
+            userId,
+            userRole: userRole as UserRole,
+        });
+
+        // Auto-seed system roles in DB if empty for this organization
+        if (roles.length === 0) {
+            const createRoleUseCase = container.resolve<CreateRoleUseCase>(InjectionTokens.CreateRoleUseCase);
+            for (const sysRole of DEFAULT_SYSTEM_ROLES) {
+                try {
+                    await createRoleUseCase.execute({
+                        name: sysRole.name,
+                        permissionIds: sysRole.permissions,
+                        organizationId,
+                        actingUserId: userId,
+                        actingUserRole: userRole as UserRole,
+                    });
+                } catch {
+                    // Ignore duplicate errors during seeding
+                }
+            }
+            roles = await listRolesUseCase.execute({
+                organizationId,
+                userId,
+                userRole: userRole as UserRole,
+            });
+        }
+
+        const items = roles.map(mapRoleToItem);
+        return { success: true, data: items };
+    } catch (err: any) {
+        console.error('Error fetching persistent roles from DB:', err);
+        return { success: false, error: err.message || 'Error al obtener roles de la base de datos.' };
+    }
 }
 
 export async function createPersistentRole(
@@ -94,22 +139,27 @@ export async function createPersistentRole(
     permissions: string[]
 ): Promise<RoleActionResult<PersistentRoleItem>> {
     const authCheck = await checkAuthUser();
-    if (!authCheck.authenticated) {
+    if (!authCheck.authenticated || !authCheck.user) {
         return { success: false, error: authCheck.error };
     }
 
-    const newRole: PersistentRoleItem = {
-        id: `role-${Date.now()}`,
-        name: name.trim().toUpperCase(),
-        office,
-        isSystemRole: false,
-        description: description || 'Rol personalizado asignado por Super Usuario.',
-        permissions,
-        createdAt: new Date().toISOString(),
-    };
+    try {
+        const { organizationId, id: userId, role: userRole } = authCheck.user;
+        const createRoleUseCase = container.resolve<CreateRoleUseCase>(InjectionTokens.CreateRoleUseCase);
 
-    ROLES_STORE.unshift(newRole);
-    return { success: true, data: newRole };
+        const newRole = await createRoleUseCase.execute({
+            name: name.trim().toUpperCase(),
+            permissionIds: permissions,
+            organizationId,
+            actingUserId: userId,
+            actingUserRole: userRole as UserRole,
+        });
+
+        return { success: true, data: mapRoleToItem(newRole) };
+    } catch (err: any) {
+        console.error('Error creating persistent role in DB:', err);
+        return { success: false, error: err.message || 'Error al crear el rol en la base de datos.' };
+    }
 }
 
 export async function updatePersistentRole(
@@ -120,49 +170,54 @@ export async function updatePersistentRole(
     permissions: string[]
 ): Promise<RoleActionResult<PersistentRoleItem>> {
     const authCheck = await checkAuthUser();
-    if (!authCheck.authenticated) {
+    if (!authCheck.authenticated || !authCheck.user) {
         return { success: false, error: authCheck.error };
     }
 
-    const normalizedName = name.trim().toUpperCase();
-    const idx = ROLES_STORE.findIndex(r => r.id === id || r.name.toUpperCase() === normalizedName);
+    try {
+        const { organizationId, id: userId, role: userRole } = authCheck.user;
+        const updateRoleUseCase = container.resolve<UpdateRoleUseCase>(InjectionTokens.UpdateRoleUseCase);
 
-    if (idx !== -1) {
-        ROLES_STORE[idx] = {
-            ...ROLES_STORE[idx],
-            name: normalizedName,
-            office,
-            description: description || 'Rol actualizado por Administrador.',
-            permissions,
-        };
-        return { success: true, data: ROLES_STORE[idx] };
+        const updatedRole = await updateRoleUseCase.execute({
+            id,
+            name: name.trim().toUpperCase(),
+            permissionIds: permissions,
+            organizationId,
+            actingUserId: userId,
+            actingUserRole: userRole as UserRole,
+        });
+
+        if (!updatedRole) {
+            return { success: false, error: 'Rol no encontrado o sin cambios.' };
+        }
+
+        return { success: true, data: mapRoleToItem(updatedRole) };
+    } catch (err: any) {
+        console.error('Error updating persistent role in DB:', err);
+        return { success: false, error: err.message || 'Error al actualizar el rol en la base de datos.' };
     }
-
-    // Upsert if not found
-    const newRole: PersistentRoleItem = {
-        id: id || `role-${Date.now()}`,
-        name: normalizedName,
-        office,
-        isSystemRole: false,
-        description: description || 'Rol actualizado por Administrador.',
-        permissions,
-        createdAt: new Date().toISOString(),
-    };
-
-    ROLES_STORE.unshift(newRole);
-    return { success: true, data: newRole };
 }
 
 export async function deletePersistentRole(id: string, roleName?: string): Promise<RoleActionResult<void>> {
     const authCheck = await checkAuthUser();
-    if (!authCheck.authenticated) {
+    if (!authCheck.authenticated || !authCheck.user) {
         return { success: false, error: authCheck.error };
     }
 
-    const normalizedName = roleName ? roleName.trim().toUpperCase() : '';
-    const idx = ROLES_STORE.findIndex(r => r.id === id || (normalizedName && r.name.toUpperCase() === normalizedName));
-    if (idx !== -1) {
-        ROLES_STORE.splice(idx, 1);
+    try {
+        const { organizationId, id: userId, role: userRole } = authCheck.user;
+        const deleteRoleUseCase = container.resolve<DeleteRoleUseCase>(InjectionTokens.DeleteRoleUseCase);
+
+        await deleteRoleUseCase.execute({
+            id,
+            organizationId,
+            actingUserId: userId,
+            actingUserRole: userRole as UserRole,
+        });
+
+        return { success: true };
+    } catch (err: any) {
+        console.error('Error deleting persistent role in DB:', err);
+        return { success: false, error: err.message || 'Error al eliminar el rol de la base de datos.' };
     }
-    return { success: true };
 }

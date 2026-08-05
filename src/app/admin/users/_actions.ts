@@ -9,6 +9,7 @@ import { ListUsersUseCase } from '~/modules/users/application/list-users.use-cas
 import { CreateUserUseCase } from '~/modules/users/application/create-user.use-case';
 import { UpdateUserUseCase } from '~/modules/users/application/update-user.use-case';
 import { DeleteUserUseCase } from '~/modules/users/application/delete-user.use-case';
+import { AssignUserRolesUseCase } from '~/modules/users/application/assign-user-roles.use-case';
 import type { User, UserRole } from '~/modules/users/core/user.repository';
 
 async function getSecurityContext() {
@@ -39,10 +40,16 @@ export async function listUsers(): Promise<User[]> {
     return listUsersUseCase.execute({ organizationId, userId, userRole });
 }
 
-export async function createUser(name: string, email: string, role: UserRole) {
+export async function createUser(
+    name: string,
+    email: string,
+    role: UserRole,
+    jobTitle?: string | null,
+    roleIds?: string[]
+) {
     const { organizationId, userId, userRole } = await getSecurityContext();
     const createUserUseCase = container.resolve<CreateUserUseCase>(InjectionTokens.CreateUserUseCase);
-    return createUserUseCase.execute({
+    const result = await createUserUseCase.execute({
         name,
         email,
         role,
@@ -50,12 +57,33 @@ export async function createUser(name: string, email: string, role: UserRole) {
         actingUserId: userId,
         actingUserRole: userRole,
     });
+
+    if (result.user?.id && (jobTitle !== undefined || (roleIds && roleIds.length > 0))) {
+        const assignRolesUseCase = container.resolve<AssignUserRolesUseCase>(InjectionTokens.AssignUserRolesUseCase);
+        await assignRolesUseCase.execute({
+            userId: result.user.id,
+            organizationId,
+            roleIds: roleIds || [],
+            jobTitle: jobTitle !== undefined ? jobTitle : null,
+        });
+        if (jobTitle !== undefined) {
+            result.user.jobTitle = jobTitle;
+        }
+    }
+
+    return result;
 }
 
-export async function updateUser(id: string, name?: string, role?: UserRole) {
+export async function updateUser(
+    id: string,
+    name?: string,
+    role?: UserRole,
+    jobTitle?: string | null,
+    roleIds?: string[]
+) {
     const { organizationId, userId, userRole } = await getSecurityContext();
     const updateUserUseCase = container.resolve<UpdateUserUseCase>(InjectionTokens.UpdateUserUseCase);
-    return updateUserUseCase.execute({
+    const updatedUser = await updateUserUseCase.execute({
         id,
         name,
         role,
@@ -63,6 +91,21 @@ export async function updateUser(id: string, name?: string, role?: UserRole) {
         actingUserId: userId,
         actingUserRole: userRole,
     });
+
+    if (id && (jobTitle !== undefined || roleIds !== undefined)) {
+        const assignRolesUseCase = container.resolve<AssignUserRolesUseCase>(InjectionTokens.AssignUserRolesUseCase);
+        await assignRolesUseCase.execute({
+            userId: id,
+            organizationId,
+            roleIds: roleIds || [],
+            jobTitle: jobTitle !== undefined ? jobTitle : null,
+        });
+        if (updatedUser && jobTitle !== undefined) {
+            updatedUser.jobTitle = jobTitle;
+        }
+    }
+
+    return updatedUser;
 }
 
 export async function deleteUser(id: string) {
