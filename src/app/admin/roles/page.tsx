@@ -204,9 +204,19 @@ export default function RolesManagementPage() {
             if (typeof window !== 'undefined') {
                 try {
                     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-                    const currentLocal: PersistentRoleItem[] = stored ? JSON.parse(stored) : [];
-                    const updatedLocal = currentLocal.map(r => r.id === editingRoleId ? updated : r);
-                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
+                    let currentLocal: PersistentRoleItem[] = stored ? JSON.parse(stored) : [];
+                    let found = false;
+                    currentLocal = currentLocal.map(r => {
+                        if (r.id === editingRoleId || r.name.toUpperCase() === updated.name.toUpperCase()) {
+                            found = true;
+                            return updated;
+                        }
+                        return r;
+                    });
+                    if (!found) {
+                        currentLocal.unshift(updated);
+                    }
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(currentLocal));
                 } catch {}
             }
 
@@ -225,13 +235,13 @@ export default function RolesManagementPage() {
     const handleDeleteRole = async (id: string, rName: string) => {
         if (!confirm(`¿Está seguro de eliminar el rol "${rName}"?`)) return;
         try {
-            const res = await deletePersistentRole(id);
+            const res = await deletePersistentRole(id, rName);
             if (typeof window !== 'undefined') {
                 try {
                     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
                     if (stored) {
                         const currentLocal: PersistentRoleItem[] = JSON.parse(stored);
-                        const updatedLocal = currentLocal.filter(r => r.id !== id && r.name !== rName);
+                        const updatedLocal = currentLocal.filter(r => r.id !== id && r.name.toUpperCase() !== rName.toUpperCase());
                         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
                     }
                 } catch {}

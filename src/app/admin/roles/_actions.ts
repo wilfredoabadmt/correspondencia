@@ -124,11 +124,13 @@ export async function updatePersistentRole(
         return { success: false, error: authCheck.error };
     }
 
-    const idx = ROLES_STORE.findIndex(r => r.id === id);
+    const normalizedName = name.trim().toUpperCase();
+    const idx = ROLES_STORE.findIndex(r => r.id === id || r.name.toUpperCase() === normalizedName);
+
     if (idx !== -1) {
         ROLES_STORE[idx] = {
             ...ROLES_STORE[idx],
-            name: name.trim().toUpperCase(),
+            name: normalizedName,
             office,
             description: description || 'Rol actualizado por Administrador.',
             permissions,
@@ -136,20 +138,31 @@ export async function updatePersistentRole(
         return { success: true, data: ROLES_STORE[idx] };
     }
 
-    return { success: false, error: 'Rol no encontrado en el sistema.' };
+    // Upsert if not found
+    const newRole: PersistentRoleItem = {
+        id: id || `role-${Date.now()}`,
+        name: normalizedName,
+        office,
+        isSystemRole: false,
+        description: description || 'Rol actualizado por Administrador.',
+        permissions,
+        createdAt: new Date().toISOString(),
+    };
+
+    ROLES_STORE.unshift(newRole);
+    return { success: true, data: newRole };
 }
 
-export async function deletePersistentRole(id: string): Promise<RoleActionResult<void>> {
+export async function deletePersistentRole(id: string, roleName?: string): Promise<RoleActionResult<void>> {
     const authCheck = await checkAuthUser();
     if (!authCheck.authenticated) {
         return { success: false, error: authCheck.error };
     }
 
-    const idx = ROLES_STORE.findIndex(r => r.id === id);
+    const normalizedName = roleName ? roleName.trim().toUpperCase() : '';
+    const idx = ROLES_STORE.findIndex(r => r.id === id || (normalizedName && r.name.toUpperCase() === normalizedName));
     if (idx !== -1) {
         ROLES_STORE.splice(idx, 1);
-        return { success: true };
     }
-
-    return { success: false, error: 'Rol no encontrado para eliminar.' };
+    return { success: true };
 }
