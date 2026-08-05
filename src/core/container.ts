@@ -43,6 +43,10 @@ import { UpdateExpedienteUseCase } from '~/modules/gestion-documental/applicatio
 import { AssociateDocumentUseCase } from '~/modules/gestion-documental/application/associate-document.use-case.impl';
 import { DisassociateDocumentUseCase } from '~/modules/gestion-documental/application/disassociate-document.use-case.impl';
 
+import { DrizzleCiteConfigRepository } from '~/modules/gestion-documental/infra/drizzle-cite-config.repository';
+import { GenerateNextCiteUseCase } from '~/modules/gestion-documental/application/generate-next-cite.use-case';
+import { ManageCiteConfigsUseCase } from '~/modules/gestion-documental/application/manage-cite-configs.use-case';
+
 import { DrizzleUserRepository } from '~/modules/users/infra/drizzle-user.repository';
 import { CreateUserUseCase } from '~/modules/users/application/create-user.use-case';
 import { UpdateUserUseCase } from '~/modules/users/application/update-user.use-case';
@@ -122,6 +126,15 @@ container.register(InjectionTokens.SignDocumentUseCase, {
 });
 container.register(InjectionTokens.VerifyDocumentUseCase, {
     useClass: VerifyDocumentUseCase,
+});
+container.register(InjectionTokens.CiteConfigRepository, {
+    useClass: DrizzleCiteConfigRepository,
+});
+container.register(InjectionTokens.GenerateNextCiteUseCase, {
+    useClass: GenerateNextCiteUseCase,
+});
+container.register(InjectionTokens.ManageCiteConfigsUseCase, {
+    useClass: ManageCiteConfigsUseCase,
 });
 
 // Register Expediente Dependencies

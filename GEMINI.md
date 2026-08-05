@@ -2,12 +2,13 @@
 
 > Este `GEMINI.md` es el **archivo de contexto persistente para Gemini CLI**. Define las reglas operativas, el stack y el flujo de trabajo para este repositorio. No es un prompt para el chat web.
 
-## 1. Feature Activa: 018-firma-digital-verificacion-qr
+## 1. Feature Activa: 019-gestor-cites-configurables
 
 - **Constitución**: `.specify/memory/constitution.md`
-- **Spec**: `specs/018-firma-digital-verificacion-qr/spec.md`
+- **Spec**: `specs/019-gestor-cites-configurables/spec.md`
 
 ## Features Previas (archivadas en `specs/`)
+- **018-firma-digital-verificacion-qr**: Firma electrónica y código QR de validación en Hoja de Ruta e impresión oficial.
 - **017-gestion-expedientes-virtuales**: Gestión de expedientes virtuales, vinculación/desvinculación de documentos y seguimiento consolidado.
 - **016-perfil-usuario-destinatarios-frecuentes**: Implementado el perfil de usuario y la gestión de una libreta de destinatarios frecuentes para agilizar las derivaciones.
 - **015-reportes-gerenciales-monitoreo**: Módulo de consulta gerencial, monitoreo y exportaciones Excel/PDF.
@@ -27,8 +28,7 @@
 
 ## 2. Próximas Features (Propuestas SDD)
 
-- **Feature 018: Firma Digital y Verificación QR** (Activa)
-- **Feature 019: Gestor de CITEs Automáticos Configurables**
+- **Feature 019: Gestor de CITEs Automáticos Configurables** (Activa)
 - **Feature 020: Ventanilla Única y Seguimiento Público para Ciudadanos**
 - **Feature 021: Proveídos Tipificados y Derivación Multidestino (Original/Copia)**
 

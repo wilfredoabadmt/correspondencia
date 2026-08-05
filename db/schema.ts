@@ -250,3 +250,28 @@ export const favoriteRecipients = pgTable('favorite_recipients', {
         }).onDelete('cascade'),
     };
 });
+
+export const citeConfigs = pgTable('cite_configs', {
+    id: text('id').primaryKey().$defaultFn(() => createId()),
+    organizationId: text('organization_id').notNull(),
+    areaId: text('area_id'),
+    documentType: text('document_type'),
+    formatPattern: text('format_pattern').notNull(),
+    currentSequence: integer('current_sequence').default(0).notNull(),
+    year: integer('year').notNull(),
+    resetYearly: boolean('reset_yearly').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+    return {
+        organizationIdIdx: index('idx_cite_configs_organization_id').on(table.organizationId),
+        organizationFk: foreignKey({
+            columns: [table.organizationId],
+            foreignColumns: [organizations.id],
+        }).onDelete('cascade'),
+        areaFk: foreignKey({
+            columns: [table.areaId],
+            foreignColumns: [areaHierarchy.id],
+        }).onDelete('set null'),
+    };
+});

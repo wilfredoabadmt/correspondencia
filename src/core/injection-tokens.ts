@@ -20,6 +20,9 @@ export const InjectionTokens = {
     UnarchiveDocumentUseCase: Symbol('IUnarchiveDocumentUseCase'),
     SignDocumentUseCase: Symbol('ISignDocumentUseCase'),
     VerifyDocumentUseCase: Symbol('IVerifyDocumentUseCase'),
+    CiteConfigRepository: Symbol('ICiteConfigRepository'),
+    GenerateNextCiteUseCase: Symbol('IGenerateNextCiteUseCase'),
+    ManageCiteConfigsUseCase: Symbol('IManageCiteConfigsUseCase'),
     DocumentHistoryRepository: Symbol('IDocumentHistoryRepository'),
     GetDocumentHistoryUseCase: Symbol('IGetDocumentHistoryUseCase'),
     // Auth & Users

@@ -5,6 +5,7 @@ import type { IAreaHierarchyRepository } from '../core/area-hierarchy.repository
 import type { Document } from '../core/document.entity';
 import { DocumentStatus } from '../core/document.entity';
 import type { IDocumentRepository } from '../core/document.repository';
+import type { GenerateNextCiteUseCase } from './generate-next-cite.use-case';
 import type {
     IRegisterDocumentUseCase,
     RegisterDocumentInput,
@@ -26,7 +27,9 @@ export class RegisterDocumentUseCase implements IRegisterDocumentUseCase {
         @inject(InjectionTokens.DocumentRepository)
         private readonly documentRepository: IDocumentRepository,
         @inject(InjectionTokens.AreaHierarchyRepository)
-        private readonly areaHierarchyRepository: IAreaHierarchyRepository
+        private readonly areaHierarchyRepository: IAreaHierarchyRepository,
+        @inject(InjectionTokens.GenerateNextCiteUseCase)
+        private readonly generateNextCiteUseCase: GenerateNextCiteUseCase
     ) { }
 
     async execute(input: RegisterDocumentInput): Promise<Document> {
@@ -38,8 +41,19 @@ export class RegisterDocumentUseCase implements IRegisterDocumentUseCase {
             throw new Error(`Area hierarchy with ID ${input.areaHierarchyId} not found.`);
         }
 
-        const sequence = 1;
-        const trackingCode = buildTrackingCode(input.documentType, areaCode, sequence, year);
+        let trackingCode: string;
+        try {
+            const citeResult = await this.generateNextCiteUseCase.execute({
+                organizationId: input.organizationId,
+                areaId: input.areaHierarchyId,
+                documentType: input.documentType,
+                areaCode,
+                year,
+            });
+            trackingCode = citeResult.citeCode;
+        } catch {
+            trackingCode = buildTrackingCode(input.documentType, areaCode, 1, year);
+        }
 
         const createdDocument = await this.documentRepository.create({
             id: randomUUID(),
