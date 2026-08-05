@@ -23,10 +23,12 @@ export default async function UserManagementPage() {
         redirect('/dashboard');
     }
 
-    const [users, roles] = await Promise.all([
+    const [users, rolesRes] = await Promise.all([
         listUsers().catch(() => []),
-        fetchPersistentRoles().catch(() => []),
+        fetchPersistentRoles().catch(() => ({ data: [] })),
     ]);
+
+    const roles = Array.isArray(rolesRes) ? rolesRes : rolesRes?.data || [];
 
     return (
         <SystemShell

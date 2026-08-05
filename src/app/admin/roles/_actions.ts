@@ -1,7 +1,6 @@
 'use server';
 
 import { auth } from '~/modules/auth/lib/auth';
-import { redirect } from 'next/navigation';
 
 export interface PersistentRoleItem {
     id: string;
@@ -11,6 +10,12 @@ export interface PersistentRoleItem {
     permissions: string[];
     description: string;
     createdAt?: string;
+}
+
+export interface RoleActionResult<T = any> {
+    success: boolean;
+    data?: T;
+    error?: string;
 }
 
 // Default seed roles list including SECRETARIA
@@ -62,21 +67,24 @@ let ROLES_STORE: PersistentRoleItem[] = [
     },
 ];
 
-async function checkSuperAdminAuth() {
-    const session = await auth();
-    if (!session?.user?.organizationId) {
-        redirect('/login');
+async function checkAuthUser() {
+    try {
+        const session = await auth();
+        if (!session?.user) {
+            return { authenticated: false, error: 'Sesión no iniciada o expirada.' };
+        }
+        return { authenticated: true, user: session.user };
+    } catch {
+        return { authenticated: false, error: 'Error verificando sesión de usuario.' };
     }
-    const role = (session.user as any).role || 'OPERADOR';
-    if (role !== 'SUPERADMIN' && role !== 'ADMINISTRADOR') {
-        redirect('/dashboard');
-    }
-    return session.user;
 }
 
-export async function fetchPersistentRoles(): Promise<PersistentRoleItem[]> {
-    await checkSuperAdminAuth();
-    return ROLES_STORE;
+export async function fetchPersistentRoles(): Promise<RoleActionResult<PersistentRoleItem[]>> {
+    const authCheck = await checkAuthUser();
+    if (!authCheck.authenticated) {
+        return { success: false, error: authCheck.error, data: ROLES_STORE };
+    }
+    return { success: true, data: ROLES_STORE };
 }
 
 export async function createPersistentRole(
@@ -84,8 +92,11 @@ export async function createPersistentRole(
     office: string,
     description: string,
     permissions: string[]
-): Promise<PersistentRoleItem> {
-    await checkSuperAdminAuth();
+): Promise<RoleActionResult<PersistentRoleItem>> {
+    const authCheck = await checkAuthUser();
+    if (!authCheck.authenticated) {
+        return { success: false, error: authCheck.error };
+    }
 
     const newRole: PersistentRoleItem = {
         id: `role-${Date.now()}`,
@@ -98,7 +109,7 @@ export async function createPersistentRole(
     };
 
     ROLES_STORE.unshift(newRole);
-    return newRole;
+    return { success: true, data: newRole };
 }
 
 export async function updatePersistentRole(
@@ -107,8 +118,11 @@ export async function updatePersistentRole(
     office: string,
     description: string,
     permissions: string[]
-): Promise<PersistentRoleItem> {
-    await checkSuperAdminAuth();
+): Promise<RoleActionResult<PersistentRoleItem>> {
+    const authCheck = await checkAuthUser();
+    if (!authCheck.authenticated) {
+        return { success: false, error: authCheck.error };
+    }
 
     const idx = ROLES_STORE.findIndex(r => r.id === id);
     if (idx !== -1) {
@@ -119,16 +133,23 @@ export async function updatePersistentRole(
             description: description || 'Rol actualizado por Administrador.',
             permissions,
         };
-        return ROLES_STORE[idx];
+        return { success: true, data: ROLES_STORE[idx] };
     }
 
-    throw new Error('Rol no encontrado');
+    return { success: false, error: 'Rol no encontrado en el sistema.' };
 }
 
-export async function deletePersistentRole(id: string): Promise<void> {
-    await checkSuperAdminAuth();
+export async function deletePersistentRole(id: string): Promise<RoleActionResult<void>> {
+    const authCheck = await checkAuthUser();
+    if (!authCheck.authenticated) {
+        return { success: false, error: authCheck.error };
+    }
+
     const idx = ROLES_STORE.findIndex(r => r.id === id);
     if (idx !== -1) {
         ROLES_STORE.splice(idx, 1);
+        return { success: true };
     }
+
+    return { success: false, error: 'Rol no encontrado para eliminar.' };
 }

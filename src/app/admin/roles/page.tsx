@@ -71,7 +71,8 @@ export default function RolesManagementPage() {
     const loadRoles = async () => {
         try {
             setLoading(true);
-            const serverData = await fetchPersistentRoles();
+            const res = await fetchPersistentRoles();
+            const serverData = res.data || [];
             let localData: PersistentRoleItem[] = [];
             if (typeof window !== 'undefined') {
                 try {
@@ -133,13 +134,19 @@ export default function RolesManagementPage() {
 
         try {
             setSubmitting(true);
-            const newRole = await createPersistentRole(
+            const res = await createPersistentRole(
                 newRoleName,
                 newRoleOffice,
                 newRoleDescription,
                 selectedPermissionIds
             );
 
+            if (!res.success || !res.data) {
+                setSuccessMessage(`Error al crear rol: ${res.error || 'Operación fallida'}`);
+                return;
+            }
+
+            const newRole = res.data;
             if (typeof window !== 'undefined') {
                 try {
                     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -159,7 +166,7 @@ export default function RolesManagementPage() {
             await loadRoles();
             setTimeout(() => setSuccessMessage(''), 5000);
         } catch (err: any) {
-            setSuccessMessage(`Error al crear rol: ${err.message}`);
+            setSuccessMessage(`Error al crear rol: ${err?.message || 'Fallo inesperado'}`);
         } finally {
             setSubmitting(false);
         }
@@ -180,7 +187,7 @@ export default function RolesManagementPage() {
 
         try {
             setSubmitting(true);
-            const updated = await updatePersistentRole(
+            const res = await updatePersistentRole(
                 editingRoleId,
                 editRoleName,
                 editRoleOffice,
@@ -188,6 +195,12 @@ export default function RolesManagementPage() {
                 editSelectedPermissionIds
             );
 
+            if (!res.success || !res.data) {
+                setSuccessMessage(`Error al actualizar rol: ${res.error || 'Operación fallida'}`);
+                return;
+            }
+
+            const updated = res.data;
             if (typeof window !== 'undefined') {
                 try {
                     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -203,7 +216,7 @@ export default function RolesManagementPage() {
             await loadRoles();
             setTimeout(() => setSuccessMessage(''), 5000);
         } catch (err: any) {
-            setSuccessMessage(`Error al actualizar rol: ${err.message}`);
+            setSuccessMessage(`Error al actualizar rol: ${err?.message || 'Fallo inesperado'}`);
         } finally {
             setSubmitting(false);
         }
@@ -212,7 +225,7 @@ export default function RolesManagementPage() {
     const handleDeleteRole = async (id: string, rName: string) => {
         if (!confirm(`¿Está seguro de eliminar el rol "${rName}"?`)) return;
         try {
-            await deletePersistentRole(id);
+            const res = await deletePersistentRole(id);
             if (typeof window !== 'undefined') {
                 try {
                     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -223,10 +236,14 @@ export default function RolesManagementPage() {
                     }
                 } catch {}
             }
-            setSuccessMessage(`Rol "${rName}" eliminado.`);
+            if (res.success) {
+                setSuccessMessage(`Rol "${rName}" eliminado.`);
+            } else {
+                setSuccessMessage(`Aviso: ${res.error || 'Se eliminó localmente'}`);
+            }
             await loadRoles();
         } catch (err: any) {
-            setSuccessMessage(`Error al eliminar: ${err.message}`);
+            setSuccessMessage(`Error al eliminar: ${err?.message || 'Fallo inesperado'}`);
         }
     };
 
