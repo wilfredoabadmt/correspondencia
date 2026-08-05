@@ -13,7 +13,7 @@ export default async function middleware(req: NextRequest) {
     const isPublic = publicRoutes.includes(nextUrl.pathname);
 
     if (isLoggedIn) {
-        if (isPublic) {
+        if (nextUrl.pathname === '/login') {
             return NextResponse.redirect(new URL(protectedRoutesDefaultRedirect, nextUrl));
         }
         return NextResponse.next();

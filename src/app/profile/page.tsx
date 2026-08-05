@@ -119,10 +119,7 @@ export default async function ProfilePage() {
                                         <p className="font-semibold text-xs text-white">{fav.targetAreaName}</p>
                                         {fav.alias && <p className="text-[10px] text-slate-400">Alias: {fav.alias}</p>}
                                     </div>
-                                    <form action={async () => {
-                                        'use server';
-                                        await removeFavoriteAction(fav.id);
-                                    }}>
+                                    <form action={removeFavoriteAction.bind(null, fav.id)}>
                                         <Button size="sm" variant="ghost" className="text-rose-400 hover:text-rose-300 text-xs">
                                             Eliminar
                                         </Button>
