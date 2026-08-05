@@ -60,7 +60,7 @@ export class GenerateReportUseCase {
                 trackingCode: doc.trackingCode || doc.trackingId || 'SN',
                 subject: doc.subject || 'Sin Asunto',
                 sender: doc.sender || 'Remitente',
-                destinationAreaName: (doc as any).destinationAreaName || 'Área Destino',
+                destinationAreaName: doc.destinationAreaName || 'Área Destino',
                 status: doc.status || 'Registrado',
                 documentType: doc.documentType || 'Informe',
                 receptionDate: doc.receptionDate,
@@ -71,8 +71,14 @@ export class GenerateReportUseCase {
         });
 
         const totalDocuments = documents.length;
-        const pendingCount = documents.filter((d) => d.status === 'Recibido' || d.status === 'PENDIENTE_RECEPCION').length;
-        const receivedCount = documents.filter((d) => d.status === 'Recibido').length;
+        const pendingCount = documents.filter((d) => {
+            const st = (d.status || '').toUpperCase();
+            return st === 'RECIBIDO' || st === 'PENDIENTE_RECEPCION';
+        }).length;
+        const receivedCount = documents.filter((d) => {
+            const st = (d.status || '').toUpperCase();
+            return st === 'RECIBIDO';
+        }).length;
         const overdueCount = documents.filter((d) => d.daysElapsed >= 5).length;
 
         return {

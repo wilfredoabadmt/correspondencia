@@ -39,7 +39,7 @@ export interface IDocumentRepository {
 
     findDetailsById(params: { id: string; organizationId: string }): Promise<DocumentWithArea | null>;
 
-    findMany(params: FindManyDocumentsParams): Promise<PaginatedResult<Document>>;
+    findMany(params: FindManyDocumentsParams): Promise<PaginatedResult<DocumentWithArea>>;
 
     derive(params: DeriveParams): Promise<void>;
 

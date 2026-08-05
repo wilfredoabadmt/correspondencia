@@ -53,13 +53,13 @@ export class DrizzleDocumentRepository implements IDocumentRepository {
         pageSize,
         query,
         status,
-    }: FindManyDocumentsParams): Promise<PaginatedResult<Document>> {
+    }: FindManyDocumentsParams): Promise<PaginatedResult<DocumentWithArea>> {
         const conditions: (SQL | undefined)[] = [
             eq(schema.documents.organizationId, organizationId),
         ];
 
         if (status) {
-            conditions.push(eq(schema.documents.status, status as any));
+            conditions.push(ilike(schema.documents.status, status));
         }
 
         if (query) {
@@ -72,6 +72,7 @@ export class DrizzleDocumentRepository implements IDocumentRepository {
         }
 
         const finalConditions = and(...conditions.filter((c): c is SQL => !!c));
+        const documentColumns = getTableColumns(schema.documents);
 
         const [totalResult, data] = await this.db.transaction(async (tx) => {
             const totalQuery = tx
@@ -80,10 +81,17 @@ export class DrizzleDocumentRepository implements IDocumentRepository {
                 .where(finalConditions);
 
             const dataQuery = tx
-                .select()
+                .select({
+                    ...documentColumns,
+                    destinationAreaName: schema.areaHierarchy.name,
+                })
                 .from(schema.documents)
+                .leftJoin(
+                    schema.areaHierarchy,
+                    eq(schema.documents.destinationAreaId, schema.areaHierarchy.id)
+                )
                 .where(finalConditions)
-                .orderBy(desc(schema.documents.receptionDate))
+                .orderBy(desc(schema.documents.createdAt))
                 .limit(pageSize)
                 .offset((page - 1) * pageSize);
 
@@ -92,7 +100,7 @@ export class DrizzleDocumentRepository implements IDocumentRepository {
 
         const total = totalResult[0]?.value ?? 0;
 
-        return { data, total };
+        return { data: data as DocumentWithArea[], total };
     }
 
     async derive({

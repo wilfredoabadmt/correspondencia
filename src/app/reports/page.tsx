@@ -28,11 +28,14 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
 
     const report = await useCase.execute({
         organizationId: user.organizationId,
-        status: searchParams.status,
-    }).catch(() => ({
-        summary: { totalDocuments: 0, pendingCount: 0, receivedCount: 0, overdueCount: 0 },
-        documents: [],
-    }));
+        status: searchParams?.status || undefined,
+    }).catch((err) => {
+        console.error('[ReportsPage] Error generating report:', err);
+        return {
+            summary: { totalDocuments: 0, pendingCount: 0, receivedCount: 0, overdueCount: 0 },
+            documents: [],
+        };
+    });
 
     return (
         <SystemShell
@@ -80,6 +83,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
                                     <th className="py-3 px-4 font-semibold">N° Hoja de Ruta</th>
                                     <th className="py-3 px-4 font-semibold">Asunto</th>
                                     <th className="py-3 px-4 font-semibold">Remitente</th>
+                                    <th className="py-3 px-4 font-semibold">Área Destino</th>
                                     <th className="py-3 px-4 font-semibold">Estado</th>
                                     <th className="py-3 px-4 font-semibold">Plazo / Días</th>
                                     <th className="py-3 px-4 font-semibold">Fecha Ingreso</th>
@@ -88,7 +92,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
                             <tbody className="divide-y divide-slate-800/60">
                                 {report.documents.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="py-8 text-center text-slate-400">
+                                        <td colSpan={7} className="py-8 text-center text-slate-400">
                                             No se encontraron trámites que coincidan con los criterios de reporte.
                                         </td>
                                     </tr>
@@ -98,6 +102,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
                                             <td className="py-3.5 px-4 font-mono font-bold text-cyan-400">{doc.trackingCode}</td>
                                             <td className="py-3.5 px-4 font-medium text-slate-200">{doc.subject}</td>
                                             <td className="py-3.5 px-4 text-slate-300">{doc.sender}</td>
+                                            <td className="py-3.5 px-4 text-slate-300">{doc.destinationAreaName}</td>
                                             <td className="py-3.5 px-4 text-slate-300">{doc.status}</td>
                                             <td className="py-3.5 px-4">
                                                 <StatusSemaphoreBadge startDate={doc.receptionDate || doc.createdAt} />

@@ -30,9 +30,10 @@ export function ReportFilters() {
                         className="h-9 px-3 text-sm rounded-md border bg-background"
                     >
                         <option value="">Todos los Estados</option>
-                        <option value="Recibido">Recibido (Pendiente)</option>
+                        <option value="RECIBIDO">Recibido (Pendiente)</option>
                         <option value="PENDIENTE_RECEPCION">En Tránsito</option>
-                        <option value="Archivado">Archivado</option>
+                        <option value="ARCHIVADO">Archivado</option>
+                        <option value="RECHAZADO">Rechazado</option>
                     </select>
                 </div>
 
