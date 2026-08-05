@@ -3,6 +3,8 @@
 import { auth } from '~/modules/auth/lib/auth';
 import { redirect } from 'next/navigation';
 import { container, InjectionTokens } from '~/core/container';
+import { eq } from 'drizzle-orm';
+import * as schema from '~/db/schema';
 import type { IStorageService } from '~/modules/storage/core/storage.service';
 
 export interface DocumentTemplateModel {
@@ -298,9 +300,14 @@ export async function serveTemplateFile(
                         template = TEMPLATE_STORE.find(t => t.documentType === typeCode && t.isActive);
                     }
                 } catch {
-                    // Ignore repo error
+                    // Ignore repo error in test/unconnected environment
                 }
             }
+        }
+
+        // Fallback: if id is a document ID and no specific type was found, use active INF template or first active template
+        if (!template) {
+            template = TEMPLATE_STORE.find(t => t.documentType === 'INF' && t.isActive) || TEMPLATE_STORE.find(t => t.isActive);
         }
 
         if (!template) return null;
@@ -359,6 +366,7 @@ export async function serveTemplateFile(
         return null;
     }
 }
+
 
 
 
